@@ -1,0 +1,273 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+  COMPANY
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MemberType {
+  ALUMNI_UNILA
+  MAHASISWA_UNILA
+  ALUMNI_NON_UNILA
+  MAHASISWA_NON_UNILA
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String? @unique
+  fullname      String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  role          Role      @default(MEMBER)
+  accounts      Account[]
+  company       Company?
+  member        Member?
+  imageId       String?   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  image File? @relation(fields: [imageId], references: [id], onDelete: SetNull)
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model File {
+  id        String   @id @default(uuid())
+  name      String
+  type      String
+  src       String
+  path      String
+  size      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  berkasForCompany Company? @relation("BerkasFile")
+  companyLogo Company?
+  userImage   User?
+}
+
+model Company {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  logoId           String   @unique
+  berkasId         String?   @unique 
+  companyName      String
+  industry         String
+  ownership        String
+  phone            String
+  companyPhone     String @unique
+  website          String
+  publicMail       String
+  bio              String
+  address          String?
+  city             String?
+  isVerified       Boolean  @default(false)
+  verificationDocs Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  job Job[]
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logo            File?             @relation(fields: [logoId], references: [id], onDelete: Cascade)
+  berkas           File?             @relation("BerkasFile", fields: [berkasId], references: [id], onDelete: Cascade)
+  RequestVerified RequestVerified[]
+}
+
+model Member {
+  id         String     @id @default(uuid())
+  userId     String     @unique
+  memberType MemberType
+  nim        String
+  phone      String
+  address    String?
+  city       String?
+  birthDate  DateTime?
+  gender     Gender?
+  about      String?
+  skills     String[]
+  interests  String[]
+  resume     String?
+  cv         String?   
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  experience     Experience[]
+  education      Education[]
+  assessment     Assessment[]
+  jobApplication JobApplication[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Experience {
+  id           String    @id @default(uuid())
+  memberId     String
+  position     String?
+  company      String?
+  startDate    DateTime?
+  endDate      DateTime?
+  isCurrentJob Boolean   @default(false)
+  description  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model Education {
+  id                 String    @id @default(uuid())
+  memberId           String
+  level              String?
+  institution        String?
+  major              String?
+  startDate          DateTime?
+  endDate            DateTime?
+  isCurrentEducation Boolean   @default(false)
+  description        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model Assessment {
+  id        String   @id @default(uuid())
+  memberId  String
+  type      String?
+  results   Json?
+  takenAt   DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model News {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  thumbnail String
+  slug      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Article {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  thumbnail String
+  slug      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum EmploymentType {
+  Pekerja_Tetap
+  Kontrak
+  Magang
+}
+
+enum WorkTime {
+  Full_Time
+  Part_Time
+}
+
+model Job {
+  id           String    @id @default(uuid())
+  companyId    String
+  title        String
+  description  String 
+  salary       String
+  employmentType String? // Pekerja Tetap, Kontrak, Magang
+  workTime       String? // Full Time, Part Time
+  requirements String[]
+  location     String?
+  deadline     DateTime?
+  status       String?
+  skills       String[]
+  type         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  jobApplication JobApplication[]
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model JobApplication {
+  id           String   @id @default(uuid())
+  jobId        String
+  memberId     String
+  notes        String?
+  resumeMember String
+  appliedAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model verificationToken {
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model passwordResetToken {
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model RequestVerified {
+  id        String   @id @default(uuid())
+  companyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
