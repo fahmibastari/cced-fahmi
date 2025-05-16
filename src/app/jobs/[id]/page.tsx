@@ -1,11 +1,15 @@
 import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import JobDetailPublic from '@/components/public/JobDetailPublic'
+import { Params } from 'next/dist/server/request/params'
 
 interface Props {
   params: {
     id: string
   }
+}
+type PageProps = {
+  params: Params & { id: string }
 }
 
 export default async function JobDetailPage({ params }: Props): Promise<JSX.Element> {
