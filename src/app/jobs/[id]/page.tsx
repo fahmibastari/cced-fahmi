@@ -8,7 +8,7 @@ interface Props {
   }
 }
 
-export default async function JobDetailPage({ params }: { params: { id: string } }) {
+export default async function JobDetailPage({ params }: Props): Promise<JSX.Element> {
   const { id } = params
 
   const job = await prisma.job.findUnique({
