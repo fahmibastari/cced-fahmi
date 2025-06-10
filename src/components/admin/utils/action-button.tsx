@@ -14,17 +14,26 @@ interface ButtonActionProps {
 const ButtonAction = ({
   id,
   isVerified,
-  showDelete = true, // <-- default to true
+  showDelete = true,
   handleClickDelete,
   handleClickVerifikasi,
 }: ButtonActionProps) => {
   const pathname = usePathname()
   const isUserPage = pathname === '/admin/users'
 
+  const onDeleteClick = () => {
+    if (handleClickDelete) {
+      const confirmed = window.confirm('Apakah kamu yakin ingin menghapus data ini?')
+      if (confirmed) {
+        handleClickDelete()
+      }
+    }
+  }
+
   return (
     <div className='flex gap-4 justify-end'>
       {showDelete && (
-        <Button onClick={handleClickDelete} variant='destructive' size='sm'>
+        <Button onClick={onDeleteClick} variant='destructive' size='sm'>
           Hapus
         </Button>
       )}
@@ -42,5 +51,6 @@ const ButtonAction = ({
     </div>
   )
 }
+
 
 export default ButtonAction

@@ -28,6 +28,13 @@ import { Input } from '../ui/input'
 import { Textarea } from '../ui/textarea'
 import Link from 'next/link'
 import sector from '@/data/industrySector'
+import { IndustryCombobox } from '@/components/auth/register/IndustryCombobox'
+import regionData from '@/app/(public)/data/indonesia-region.json';
+import { Combobox } from '@/components/ui/combobox';
+import { useEffect } from 'react';
+
+
+
 
 interface EditProfileCompanyProps {
   data: any
@@ -135,6 +142,14 @@ const EditProfileCompany = ({ data }: EditProfileCompanyProps) => {
         })
     })
   }
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const found = regionData.find(p => p.province === selectedProvince);
+    setCityOptions(found?.cities || []);
+  }, [selectedProvince]);
+  
 
   return (
     <div className='max-w-6xl mx-auto p-8 w-full'>
@@ -288,29 +303,22 @@ const EditProfileCompany = ({ data }: EditProfileCompanyProps) => {
                     )}
                   />
                   <FormField
-                    control={formPersonal.control}
-                    name='industry'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bidang Industri</FormLabel>
-                        <FormControl>
-                        <select
-                        {...field}
-                        disabled={formPersonal.formState.isSubmitting}
-                        className='w-full border-2 border-gray-100 bg-white shadow-sm rounded-md p-2'
-                      >
-                        <option value=''>Pilih Bidang Industri</option>
-                        {sector.map((industry, idx) => (
-                          <option key={idx} value={industry}>
-                            {industry}
-                          </option>
-                        ))}
-                      </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+  control={formPersonal.control}
+  name='industry'
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Bidang Industri</FormLabel>
+      <FormControl>
+        <IndustryCombobox
+          value={field.value || ''}
+          onChange={field.onChange}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
                   <FormField
                     control={formPersonal.control}
                     name='ownership'
@@ -430,25 +438,38 @@ const EditProfileCompany = ({ data }: EditProfileCompanyProps) => {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={formPersonal.control}
-                    name='city'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Kota</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            disabled={formPersonal.formState.isSubmitting}
-                            placeholder='Kota Anda'
-                            className='border-2 border-gray-100 shadow-sm'
-                            type='text'
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormItem>
+  <FormLabel>Provinsi</FormLabel>
+  <Combobox
+    items={regionData.map(p => p.province)}
+    value={selectedProvince}
+    onChange={(val) => {
+      setSelectedProvince(val);
+    }}
+    placeholder='Pilih Provinsi'
+  />
+</FormItem>
+
+<FormField
+  control={formPersonal.control}
+  name='city'
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Kota / Kabupaten</FormLabel>
+      <FormControl>
+        <Combobox
+          items={cityOptions}
+          value={field.value ?? ''}
+          onChange={field.onChange}
+          placeholder='Pilih Kota/Kabupaten'
+          disabled={!selectedProvince}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
                   <FormField
                     control={formPersonal.control}
                     name='bio'

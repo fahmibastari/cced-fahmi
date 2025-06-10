@@ -24,6 +24,8 @@ import { registerCompany } from '@/actions/register'
 import { ImagePlus } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import sector from '@/data/industrySector'
+import { IndustryCombobox } from '@/components/auth/register/IndustryCombobox'
+
 
 interface CompanyFormProps {
   onBack: () => void
@@ -43,6 +45,8 @@ const DetailCompanyForm = ({ onBack, data }: CompanyFormProps) => {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const router = useRouter()
   const [berkasFile, setBerkasFile] = useState<File | null>(null)
+  const [showCustomIndustry, setShowCustomIndustry] = useState(false)
+
   const form = useForm<z.infer<typeof companySchema>>({
     resolver: zodResolver(companySchema),
     defaultValues: {
@@ -188,7 +192,7 @@ const DetailCompanyForm = ({ onBack, data }: CompanyFormProps) => {
                 <div className="flex flex-col items-center w-full h-40 justify-center gap-8">
                   <ImagePlus className="h-10 w-10 text-gray-400" />
                   <div className="text-sm text-gray-600">
-                    Upload PDF, Word, atau Gambar (Berkas Penyedia Kerja Terverifikasi)
+                    Upload PDF, Word, atau Gambar (Berkas Penyedia Kerja Terverifikasi) TDP/TDY/SIUP/IUMK/NIB
                   </div>
                   {berkasFile && (
                     <div className="text-sm text-green-600">File terpilih: {berkasFile.name}</div>
@@ -223,43 +227,35 @@ const DetailCompanyForm = ({ onBack, data }: CompanyFormProps) => {
               />
               {/* Bidang Industri */}
               <FormField
-                control={form.control}
-                name="industry"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bidang Industri*</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        disabled={form.formState.isSubmitting}
-                        className="w-full border-2 border-gray-100 bg-white shadow-sm rounded-md p-2"
-                      >
-                        <option value=''>Pilih Bidang Industri</option>
-                        {sector.map((industry, idx) => (
-                          <option key={idx} value={industry}>
-                            {industry}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+  control={form.control}
+  name="industry"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Bidang Industri*</FormLabel>
+      <FormControl>
+        <IndustryCombobox value={field.value} onChange={field.onChange} />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
+
+
               {/* Kepemilikan */}
               <FormField
                 control={form.control}
                 name="ownership"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Kepemilikan Penyedia Kerja*</FormLabel>
+                    <FormLabel>Skala Perusahaan*</FormLabel>
                     <FormControl>
                       <select
                         {...field}
                         disabled={form.formState.isSubmitting}
                         className="w-full border-2 border-gray-100 bg-white shadow-sm rounded-md p-2"
                       >
-                        <option value="">Pilih Kepemilikan</option>
+                        <option value="">Pilih Skala</option>
                         <option value="Perusahaan kecil">Perusahaan Kecil</option>
                         <option value="Perusahaan menengah">Perusahaan Menengah</option>
                         <option value="Perusahaan besar">Perusahaan Besar</option>

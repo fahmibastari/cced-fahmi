@@ -24,7 +24,7 @@ const HeaderMember = ({ fullname, membertype, img }: HeaderMemberProps) => {
         </Link>
         <div>
           <h2 className="text-xl font-bold text-gray-900">{fullname || 'Fullname'}</h2>
-          <p className="text-sm text-gray-600">{membertype.toLowerCase() || 'typeMember'}</p>
+          {/* <p className="text-sm text-gray-600">{membertype.toLowerCase() || 'typeMember'}</p> */}
         </div>
       </div>
 

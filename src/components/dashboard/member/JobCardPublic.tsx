@@ -1,54 +1,60 @@
 'use client'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { User } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { type FC } from 'react'
 
 interface JobCardPublicProps {
   jobId: string
-  companyLogo?: string | null
+  userId: string
+  companyLogo?: string
   companyName: string
   title: string
   location: string
   deadline: Date
   salary?: string
-}
+  onSelectJob: () => void
+  applyType?: 'internal' | 'external'
+} 
 
 const JobCardPublic = ({
   jobId,
+  userId,
   companyLogo,
   companyName,
   title,
   location,
   deadline,
   salary,
+  onSelectJob,
+  applyType = 'internal',
 }: JobCardPublicProps) => {
-  // Jika companyLogo berupa nama file (misal "logo.png"), tambahkan prefix /company-logos/
-  // Jika sudah berupa URL lengkap (misal mulai http atau /), gunakan langsung
-  const logoSrc =
-  companyLogo && companyLogo.trim() !== ''
-    ? companyLogo
-    : '/default-logo.png'
-
+  
+  const isExpired = deadline.getTime() < Date.now()
   return (
-    <Card className="relative mb-4 hover:shadow-lg transition-shadow duration-200">
+    <Card
+      className="relative mb-4 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+      onClick={onSelectJob}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onSelectJob()
+      }}
+    >
+      {/* Badge Apply Type */}
+      <div
+        className={`absolute top-2 right-2 text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm capitalize ${
+          applyType === 'external'
+            ? 'bg-yellow-100 text-yellow-800'
+            : 'bg-green-100 text-green-800'
+        }`}
+      >
+        {applyType}
+      </div>
       <CardHeader className="flex flex-col space-y-0 pb-2">
         <div className="mb-2 flex justify-between">
-          <div className="flex items-center space-x-2">
-            {/* <Avatar className="h-8 w-8">
-              <AvatarImage
-                src={logoSrc}
-                alt={`${companyName} Logo`}
-                className="object-contain"
-              />
-              <AvatarFallback>
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar> */}
-            <div className="text-sm text-gray-500">{companyName}</div>
-          </div>
+          <div className="text-sm text-gray-500">{companyName}</div>
         </div>
 
         <CardTitle className="text-lg font-bold">{title}</CardTitle>
@@ -61,20 +67,17 @@ const JobCardPublic = ({
             <p className="text-sm text-gray-500">
               Tenggat Waktu:{' '}
               <span className="font-medium text-gray-700">
-                {deadline.toLocaleDateString('id-ID', {
+                {deadline?.toLocaleDateString('id-ID', {
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric',
-                })}
+                }) ?? '-'}
               </span>
             </p>
             {salary && (
               <p className="text-sm font-semibold text-green-700">{salary}</p>
             )}
           </div>
-          <Button asChild variant="secondary">
-            <Link href={`/jobs/${jobId}`}>Lihat Detail</Link>
-          </Button>
         </div>
       </CardContent>
     </Card>

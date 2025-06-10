@@ -175,16 +175,7 @@ const ProfileCompany = ({ data }: ProfileCompanyProps) => {
   </CardContent>
 </Card>
 
-<Card className='mb-6'>
-  <CardHeader>
-    <CardTitle className='text-3xl font-bold text-green-800 mb-3'>
-      Dokumen Verifikasi
-    </CardTitle>
-  </CardHeader>
-  <CardContent className='mb-3 text-sm font-semibold text-gray-800'>
-    Tidak Ada Dokumen
-  </CardContent>
-</Card>
+{/* * */}
 
 <CardFooter className='text-center pt-6 border-t'>
   <Link

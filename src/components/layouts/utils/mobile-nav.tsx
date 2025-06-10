@@ -1,44 +1,36 @@
-import { Button } from '@/components/ui/button'
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu'
-import { signOut } from 'next-auth/react'
 import Link from 'next/link'
+import { X } from 'lucide-react'
 
 interface MobileNavProps {
-  isLoggedIn: boolean
+  items: {
+    label: string
+    href: string
+  }[]
+  onClose?: () => void
 }
 
-const MobileNav = ({ isLoggedIn }: MobileNavProps) => {
-  const logout = async () => {
-    await signOut()
-  }
-
+const MobileNav = ({ items, onClose }: MobileNavProps) => {
   return (
-    <div className='md:hidden w-full bg-white shadow-md p-4'>
-      {/* Auth Links */}
-      <div className='flex flex-col items-start gap-2 mt-4'>
-        {!isLoggedIn ? (
-          <>
-            <Link className='text-sm font-semibold text-[#025908] hover:text-green-600 transition duration-200' href='/register'>
-              Daftar
-            </Link>
-            <Link className='text-sm font-semibold text-[#025908] hover:text-green-600 transition duration-200' href='/login'>
-              Login
-            </Link>
-          </>
-        ) : (
-          <>
-            <Button className='text-sm font-semibold text-[#025908] hover:text-green-600 transition duration-200' variant={'ghost'}>
-              <Link href={'/dashboard'}>Dashboard</Link>
-            </Button>
-          </>
-        )}
+    <div className="flex flex-col h-full px-6 pt-6 pb-10 bg-white">
+      {/* Close Button */}
+      <div className="flex justify-end mb-4">
+        <button onClick={onClose} aria-label="Tutup menu">
+          <X className="h-5 w-5 text-green-800" />
+        </button>
+      </div>
+
+      {/* Navigation Links */}
+      <div className="flex flex-col gap-4">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onClose}
+            className="text-green-800 font-medium text-sm py-2 border-b border-gray-100 hover:bg-green-50 rounded-md transition"
+          >
+            {item.label}
+          </Link>
+        ))}
       </div>
     </div>
   )

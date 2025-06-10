@@ -9,10 +9,14 @@ export default async function JobDetailPage({ params }: { params: { id: string }
     where: { id },
     include: {
       company: {
-        include: { logo: true },
+        include: {
+          logo: true,
+        },
       },
+      posterFile: true, // ✅ PENTING: Tambahkan ini!
     },
   })
+  
 
   if (!job || job.status !== 'aktif') return notFound()
 

@@ -7,6 +7,7 @@ import {
   BriefcaseBusiness,
   Building2,
   FileText,
+  Key,
   LayoutGrid,
   LogOut,
   UserCog,
@@ -30,12 +31,11 @@ const Sidebar = () => {
       </h1>
       <hr className='mb-4' />
       <nav className='p-4 mb-20 flex flex-col gap-1'>
-        {[
+        {[ 
           { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
           { href: '/admin/users', label: 'Users', icon: UserCog },
           { href: '/admin/companies', label: 'Companies', icon: Building2 },
           { href: '/admin/members', label: 'Members', icon: Users },
-          { href: '/admin/content', label: 'Contents', icon: FileText },
           { href: '/admin/jobs', label: 'Jobs', icon: BriefcaseBusiness },
         ].map(({ href, label, icon: Icon }) => (
           <Button
@@ -47,17 +47,13 @@ const Sidebar = () => {
                 : 'bg-green-50 text-green-600'
             }`}
           >
-            <Link
-              href={href}
-              className='flex w-full items-center justify-between text-sm md:text-base lg:text-lg'
-            >
+            <Link href={href} className='flex w-full items-center justify-between text-sm md:text-base lg:text-lg'>
               <span>{label}</span>
               <Icon className='w-5 h-5 md:w-6 md:h-6' />
             </Link>
           </Button>
         ))}
       </nav>
-
       <Button
         variant='outline'
         onClick={logout}

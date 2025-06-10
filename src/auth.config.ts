@@ -10,10 +10,11 @@ export default {
     Credentials({
       async authorize(credentials) {
         const validateField = signInSchema.safeParse(credentials)
+
         if (validateField.success) {
           const { email, password } = validateField.data
-
           const user = await getUserByEmail(email)
+
           if (!user || !user.password) {
             return null
           }
@@ -24,6 +25,7 @@ export default {
             return user
           }
         }
+
         return null
       },
     }),

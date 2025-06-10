@@ -10,7 +10,7 @@ import { currentDetailUserCompany } from '@/lib/authenticate'
 import prisma from '@/lib/prisma'
 import { saveFile } from '@/lib/file-handler'
 
-export async function addNewJob(formData: z.infer<typeof JobSchema>) {
+export async function addNewJob(formData: FormData) {
   try {
     const user = await currentDetailUserCompany()
 
@@ -20,43 +20,73 @@ export async function addNewJob(formData: z.infer<typeof JobSchema>) {
       }
     }
 
-    const validatedFields = JobSchema.safeParse(formData)
+    // 1. Ambil field JSON dari FormData
+    const raw = {
+      title: formData.get('title') ?? '',
+      description: formData.get('description') ?? '',
+      salary: formData.get('salary') ?? '',
+      requirements: JSON.parse(formData.get('requirements') as string || '[]'),
+      skills: JSON.parse(formData.get('skills') as string || '[]'),
+      location: formData.get('location') || null,
+      status: formData.get('status') || null,
+      type: formData.get('type') || null,
+      deadline: formData.get('deadline')
+        ? new Date(formData.get('deadline') as string)
+        : null, // ✅ convert to Date
+      employmentType: formData.get('employmentType') || null,
+      workTime: formData.get('workTime') || null,
+      posterUrl: (formData.get('posterUrl') ?? '').toString(),
+
+    }
+    
+    
+    
+
+    const validatedFields = JobSchema.safeParse(raw)
 
     if (!validatedFields.success) {
+      console.log('VALIDATION ERROR:', validatedFields.error.format())
       return {
         error: 'Bidang tidak valid!',
-        details: validatedFields.error.errors,
+        details: validatedFields.error.format(),
       }
     }
+    
 
-    const {
-      title,
-      description,
-      requirements,
-      skills,
-      location,
-      status,
-      type,
-      salary,
-      deadline,
-      employmentType,
-      workTime,
-    } = validatedFields.data
+    const file = formData.get('posterFile') as File | null
 
+    if (file && raw.posterUrl) {
+      return { error: 'Hanya satu metode poster yang boleh digunakan.' }
+    }
+
+    let posterFileId: string | null = null
+
+    // 2. Jika pakai file, simpan ke tabel File
+    if (file && file.size > 0) {
+      const saved = await saveFile('job-poster', file)
+      if (!saved?.id) return { error: 'Gagal menyimpan poster.' }
+      posterFileId = saved.id
+    }
+
+    // 3. Simpan job
     const newJob = await prisma.job.create({
       data: {
         companyId: user.id,
-        title,
-        salary: salary ?? '',
-        description: description ?? '',
-        requirements,
-        skills,
-        location: location ?? null,
-        status: status ?? null,
-        type: type ?? null,
-        deadline: deadline ?? null,
-        employmentType: formData.employmentType,  // Pastikan ini ditambahkan
-        workTime: formData.workTime,              // Pastikan ini ditambahkan
+        title: validatedFields.data.title,
+        description: validatedFields.data.description ?? '',
+        salary: validatedFields.data.salary ?? '',
+        requirements: validatedFields.data.requirements,
+        skills: validatedFields.data.skills,
+        location: validatedFields.data.location ?? null,
+        status: validatedFields.data.status ?? null,
+        type: validatedFields.data.type ?? null,
+        deadline: validatedFields.data.deadline
+          ? new Date(validatedFields.data.deadline)
+          : null,
+        employmentType: validatedFields.data.employmentType,
+        workTime: validatedFields.data.workTime,
+        posterUrl: validatedFields.data.posterUrl || null,
+        ...(posterFileId ? { posterFileId } : {}),
       },
     })
 
@@ -64,12 +94,15 @@ export async function addNewJob(formData: z.infer<typeof JobSchema>) {
       success: 'Lowongan berhasil ditambahkan!',
       data: newJob,
     }
-  } catch {
+  } catch (err) {
+    console.error('[ERROR_CREATE_JOB]', err)
     return {
-      error: 'Terjadi kesalahan saat membuat lowongan.',
+      error: err instanceof Error ? err.message : JSON.stringify(err),
     }
+    
   }
 }
+
 
 export async function deleteJob(id: string) {
   try {
@@ -84,68 +117,97 @@ export async function deleteJob(id: string) {
   }
 }
 
-export async function updateJob(
-  formData: z.infer<typeof JobSchema>,
-  id: string
-) {
+export async function updateJob(formData: FormData, id: string) {
   try {
     const user = await currentDetailUserCompany()
-
     if (!user?.id) {
       return {
         error: 'Pencari kerja tidak terautentikasi atau tidak tergabung dalam penyedia kerja!',
       }
     }
 
-    const validatedFields = JobSchema.safeParse(formData)
+    // Ambil dan parsing data dari FormData
+    const raw = {
+      title: formData.get('title') ?? '',
+      description: formData.get('description') ?? '',
+      salary: formData.get('salary') ?? '',
+      requirements: JSON.parse(formData.get('requirements') as string || '[]'),
+      skills: JSON.parse(formData.get('skills') as string || '[]'),
+      location: formData.get('location') || null,
+      status: formData.get('status') || null,
+      type: formData.get('type') || null,
+      deadline: formData.get('deadline')
+        ? new Date(formData.get('deadline') as string)
+        : null,
+      employmentType: formData.get('employmentType') || null,
+      workTime: formData.get('workTime') || null,
+      posterUrl: (formData.get('posterUrl') ?? '').toString(),
 
+    }
+
+    const validatedFields = JobSchema.safeParse(raw)
     if (!validatedFields.success) {
       return {
         error: 'Bidang tidak valid!',
-        details: validatedFields.error.errors,
+        details: validatedFields.error.format(),
       }
     }
 
-    const {
-      title,
-      description,
-      salary,
-      requirements,
-      skills,
-      location,
-      status,
-      type,
-      deadline,
-    } = validatedFields.data
+    const file = formData.get('posterFile') as File | null
+    let newPosterFileId: string | null = null
 
-    const newJob = await prisma.job.update({
-      where: { id: id },
+    // Validasi hanya salah satu metode upload
+    if (file && raw.posterUrl) {
+      return { error: 'Hanya satu metode poster yang boleh digunakan.' }
+    }
+    
+    if (file && file.size > 0) {
+      raw.posterUrl = '' // <--- reset URL jika file digunakan
+    }
+    
+
+    // Upload file jika ada
+    if (file && file.size > 0) {
+      const saved = await saveFile('job-poster', file)
+      if (!saved?.id) return { error: 'Gagal menyimpan poster.' }
+      newPosterFileId = saved.id
+    }
+
+    // Update data ke database
+    const updatedJob = await prisma.job.update({
+      where: { id },
       data: {
         companyId: user.id,
-        title,
-        salary: salary ?? '',
-        description: description ?? '',
-        requirements,
-        skills,
-        location: location ?? null,
-        status: status ?? null,
-        type: type ?? null,
-        deadline: deadline ?? null,
-        employmentType: formData.employmentType,  // Pastikan ini ditambahkan
-        workTime: formData.workTime, 
+        title: validatedFields.data.title,
+        salary: validatedFields.data.salary ?? '',
+        description: validatedFields.data.description ?? '',
+        requirements: validatedFields.data.requirements,
+        skills: validatedFields.data.skills,
+        location: validatedFields.data.location ?? null,
+        status: validatedFields.data.status ?? null,
+        type: validatedFields.data.type ?? null,
+        deadline: validatedFields.data.deadline,
+        employmentType: validatedFields.data.employmentType,
+        workTime: validatedFields.data.workTime,
+        posterUrl: validatedFields.data.posterUrl || null,
+        posterFileId: newPosterFileId ?? undefined,
       },
     })
 
     return {
       success: 'Lowongan berhasil diperbarui!',
-      data: newJob,
+      data: updatedJob,
     }
-  } catch {
+
+  } catch (err) {
+    console.error('[ERROR_UPDATE_JOB]', err)
     return {
-      error: 'Terjadi kesalahan saat memperbarui lowongan.',
+      error: err instanceof Error ? err.message : JSON.stringify(err),
     }
+    
   }
 }
+
 
 export async function getJob(id: string) {
   const data = await prisma.job.findUnique({
@@ -161,8 +223,10 @@ export async function getJob(id: string) {
         },
       },
       company: true,
+      posterFile: true, // 🧩 tambahkan ini!
     },
   })
+  
 
   return { data } // ✅ ini saja cukup!
 }
@@ -180,6 +244,7 @@ export async function getDetailJobApplicant(id: string) {
         job: {
           include: {
             company: true,
+            posterFile: true,
           },
         },
       },

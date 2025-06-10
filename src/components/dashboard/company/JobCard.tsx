@@ -19,6 +19,7 @@ interface JobCardProps {
   createdAt: string
   jobApplication: JobApplication[]
   handleDelete: () => void
+  applyType?: 'internal' | 'external' // ← Tambahkan ini
 }
 
 interface JobApplication {
@@ -33,41 +34,46 @@ const JobCard = ({
   createdAt,
   jobApplication,
   handleDelete,
+  applyType, // ⬅️ INI WAJIB
 }: JobCardProps) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <div className='flex items-center justify-between'>
-            <h3>{title}</h3>
-            {status === 'aktif' && (
-              <Badge className='bg-green-500 hover:bg-green-700 cursor-default'>
-                {status}
-              </Badge>
-            )}
-            {status === 'nonaktif' && (
-              <Badge className='bg-red-500 hover:bg-red-700 cursor-default'>
-                {status}
-              </Badge>
-            )}
-            {status === 'selesai' && (
-              <Badge className='bg-blue-500 hover:bg-blue-700 cursor-default'>
-                {status}
-              </Badge>
-            )}
-            {status === 'draft' && (
-              <Badge className='bg-slate-500 hover:bg-slate-700 cursor-default'>
-                {status}
-              </Badge>
-            )}
-          </div>
-        </CardTitle>
-        <CardDescription className='flex flex-col pt-2'>
-          <Label>{location}</Label>
-          <Label className='text-sm text-gray-400'>
-            Dibuat pada: {createdAt}
-          </Label>
-        </CardDescription>
+    <Card className="relative">
+  <CardHeader>
+      <CardTitle>
+  <div className="flex items-center justify-between">
+    <h3 className="font-bold text-lg">{title}</h3>
+    <span
+      className={`text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm capitalize ${
+        applyType === 'external'
+          ? 'bg-yellow-100 text-yellow-800'
+          : 'bg-green-100 text-green-800'
+      }`}
+    >
+      {applyType}
+    </span>
+  </div>
+</CardTitle>
+
+<CardDescription className="flex flex-col pt-2 space-y-1">
+  <span className="text-sm text-gray-600">{location}</span>
+  <span className="text-sm text-gray-400">Dibuat pada: {createdAt}</span>
+
+  {/* Status Badge (aktif, nonaktif, dll) */}
+  <span
+    className={`w-fit text-xs font-medium px-2 py-0.5 rounded-full capitalize ${
+      status === 'aktif'
+        ? 'bg-green-100 text-green-700'
+        : status === 'nonaktif'
+        ? 'bg-red-100 text-red-700'
+        : status === 'selesai'
+        ? 'bg-blue-100 text-blue-700'
+        : 'bg-gray-200 text-gray-700'
+    }`}
+  >
+    {status}
+  </span>
+</CardDescription>
+
       </CardHeader>
       <CardContent className='m-4 flex justify-between border border-gray-200 p-4'>
         <div className='flex flex-col px-4 text-center'>
@@ -110,9 +116,18 @@ const JobCard = ({
         >
           <Link href={`/company/edit-job?token=${id}`}>Edit</Link>
         </Button>
-        <Button variant='destructive' className='w-24' onClick={handleDelete}>
-          Hapus
-        </Button>
+        <Button
+  variant='destructive'
+  className='w-24'
+  onClick={() => {
+    if (window.confirm('Apakah kamu yakin ingin menghapus lowongan ini?')) {
+      handleDelete()
+    }
+  }}
+>
+  Hapus
+</Button>
+
         <Button
           variant='outline'
           className='w-24 bg-blue-400 text-white hover:bg-blue-300'

@@ -13,28 +13,52 @@ import Image from 'next/image'
 import { signOut } from 'next-auth/react'
 import { Button } from '../ui/button'
 
-
-
 interface ProfileMemberProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any
 }
 
+const mapMemberType = (type: string | undefined) => {
+  switch (type?.toUpperCase()) {
+    case 'ALUMNI_UNILA':
+      return 'Alumni UNILA'
+    case 'MAHASISWA_UNILA':
+      return 'Mahasiswa UNILA'
+    case 'ALUMNI_NON_UNILA':
+      return 'Alumni Non UNILA'
+    case 'MAHASISWA_NON_UNILA':
+      return 'Mahasiswa Non UNILA'
+    default:
+      return type || '-'
+  }
+}
+
+const mapGender = (gender: string | undefined) => {
+  switch (gender?.toLowerCase()) {
+    case 'male':
+    case 'laki-laki':
+      return 'Laki-laki'
+    case 'female':
+    case 'perempuan':
+      return 'Perempuan'
+    default:
+      return gender || '-'
+  }
+}
+
+const getAge = (birthDate: string | Date): number => {
+  const birth = new Date(birthDate)
+  const today = new Date()
+  let age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    age--
+  }
+
+  return age
+}
+
 const ProfileMember = ({ data }: ProfileMemberProps) => {
-  const getAge = (birthDate: string | Date): number => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-  
-    // Jika belum lewat bulan ulang tahun, kurangi usia satu tahun
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-  
-    return age;
-  };
-  
   return (
     <div className='max-w-4xl mx-auto p-6'>
       <Card className='mb-6'>
@@ -53,21 +77,22 @@ const ProfileMember = ({ data }: ProfileMemberProps) => {
                 {data.fullname || 'Nama Lengkap'}
               </CardTitle>
               <CardDescription className='text-sm text-gray-500'>
-                {data.member.about || 'Tentang Saya'}
+                {data.member?.about || 'Tentang Saya'}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
       </Card>
+
       <div className='mb-6 flex justify-end'>
-  <Button
-    onClick={() => signOut({ callbackUrl: '/' })}
-    variant='destructive'
-    className='text-sm font-semibold'
-  >
-    Logout
-  </Button>
-</div>
+        <Button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          variant='destructive'
+          className='text-sm font-semibold'
+        >
+          Logout
+        </Button>
+      </div>
 
       <Card className='mb-6'>
         <CardHeader>
@@ -87,70 +112,85 @@ const ProfileMember = ({ data }: ProfileMemberProps) => {
           <div className='flex items-center gap-3 mb-2'>
             <span className='text-gray-900'>Peran:</span>
             <span className='text-gray-600'>
-              {data.role.toLowerCase() || '-'}
+              {data.role?.toLowerCase() || '-'}
             </span>
           </div>
           <div className='flex items-center gap-3 mb-2'>
             <span className='text-gray-900'>Status:</span>
             <span className='text-gray-600'>
-              {data.member.memberType.toLowerCase() || '-'}
+              {mapMemberType(data.member?.memberType)}
             </span>
           </div>
           <div className='flex items-center gap-3 mb-2'>
             <span className='text-gray-900'>NPM Unila:</span>
-            <span className='text-gray-600'>{data.member.nim || '-'}</span>
+            <span className='text-gray-600'>{data.member?.nim || '-'}</span>
           </div>
           <div className='flex items-center gap-3 mb-2'>
-            <span className='text-gray-900'>Nomor Telepon:</span>
-            <span className='text-gray-600'>{data.member.phone || '-'}</span>
-          </div>
-          <div className='flex items-center gap-3 mb-2'>
-            <span className='text-gray-900'>Alamat:</span>
-            <span className='text-gray-600'>
-              {data?.member?.address || '-'}
-            </span>
-          </div>
-          <div className='flex items-center gap-3 mb-2'>
-            <span className='text-gray-900'>Kota:</span>
-            <span className='text-gray-600'>{data?.member?.city || '-'}</span>
-          </div>
-          <div className='flex items-center gap-3 mb-2'>
-  <span className='text-gray-900'>Tanggal Lahir:</span>
-  <span className='text-gray-600'>
-    {data?.member?.birthDate
-      ? `${new Date(data.member.birthDate).toLocaleDateString('id-ID')} (${getAge(data.member.birthDate)} tahun)`
-      : '-'}
-  </span>
+  <span className='text-gray-900'>Jenjang Studi:</span>
+  <span className='text-gray-600'>{data.member?.studyLevel || '-'}</span>
+</div>
+<div className='flex items-center gap-3 mb-2'>
+  <span className='text-gray-900'>Jurusan:</span>
+  <span className='text-gray-600'>{data.member?.major || '-'}</span>
 </div>
 
           <div className='flex items-center gap-3 mb-2'>
+            <span className='text-gray-900'>Nomor Telepon:</span>
+            <span className='text-gray-600'>{data.member?.phone || '-'}</span>
+          </div>
+          <div className='flex items-center gap-3 mb-2'>
+            <span className='text-gray-900'>Alamat:</span>
+            <span className='text-gray-600'>{data.member?.address || '-'}</span>
+          </div>
+          <div className='flex items-center gap-3 mb-2'>
+            <span className='text-gray-900'>Kota:</span>
+            <span className='text-gray-600'>{data.member?.city || '-'}</span>
+          </div>
+          <div className='flex items-center gap-3 mb-2'>
+            <span className='text-gray-900'>Tanggal Lahir:</span>
+            <span className='text-gray-600'>
+              {data.member?.birthDate
+                ? `${new Date(data.member.birthDate).toLocaleDateString(
+                    'id-ID'
+                  )} (${getAge(data.member.birthDate)} tahun)`
+                : '-'}
+            </span>
+          </div>
+
+          <div className='flex items-center gap-3 mb-2'>
             <span className='text-gray-900'>Jenis Kelamin:</span>
-            <span className='text-gray-600'>{data?.member?.gender || '-'}</span>
+            <span className='text-gray-600'>{mapGender(data.member?.gender)}</span>
           </div>
         </CardContent>
       </Card>
 
       <Card className='mb-6'>
-        <CardHeader>
-          <CardTitle className='text-3xl font-bold text-green-800 mb-3'>
-            Pekerjaan yang Dilamar
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.member?.jobApplication?.length > 0 ? (
-            <ul className='list-disc space-y-2 pl-6 text-gray-700'>
-              {data.member?.jobApplication?.map(
-                (job: any, index: number) =>
-                  job.job.status === 'aktif' && (
-                    <li key={index}>{job.job.title}</li>
-                  )
-              )}
-            </ul>
-          ) : (
-            <p>Tidak ada pekerjaan yang dilamar</p>
-          )}
-        </CardContent>
-      </Card>
+  <CardHeader>
+    <CardTitle className='text-3xl font-bold text-green-800 mb-3'>
+      Pekerjaan yang Dilamar
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    {data.member?.jobApplication?.length > 0 ? (
+      <ul className='list-disc space-y-2 pl-6 text-gray-700'>
+        {data.member.jobApplication.map((jobApp: any, index: number) => (
+          <li key={index}>
+            <strong>{jobApp.job.title}</strong> di{' '}
+            <span className='font-semibold text-gray-700'>
+              {jobApp.job.company?.companyName || 'Nama Perusahaan'}
+            </span>{' '}
+            —{' '}
+            <span className={`font-semibold ${jobApp.job.status === 'aktif' ? 'text-green-600' : 'text-red-600'}`}>
+              {jobApp.job.status}
+            </span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>Tidak ada pekerjaan yang dilamar</p>
+    )}
+  </CardContent>
+</Card>
 
       <Card className='mb-6'>
         <CardHeader>

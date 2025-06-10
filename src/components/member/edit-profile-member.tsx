@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
-import { startTransition, useRef, useState } from 'react'
+import { startTransition, useEffect, useRef, useState } from 'react'
 import { ImagePlus, X } from 'lucide-react'
 import { Button } from '../ui/button'
 import { FormError } from '../auth/form-error'
@@ -59,12 +59,8 @@ const EditProfileMember = ({ data }: EditProfileMemberProps) => {
   const [srcCv, setSrcCv] = useState<string | null>(data?.cv?.src || null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const gender = ['Laki-laki', 'Perempuan']
-  const dataMemberType = [
-    'Alumni Unila',
-    'Mahasiswa Unila',
-    'Alumni Non Unila',
-    'Mahasiswa Non Unila',
-  ]
+ 
+  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -189,18 +185,55 @@ const EditProfileMember = ({ data }: EditProfileMemberProps) => {
   const formPersonal = useForm<z.infer<typeof updateMemberSchema>>({
     resolver: zodResolver(updateMemberSchema),
     defaultValues: {
-      username: data.username || '',
-      fullname: data.fullname || '',
-      memberType: data.member.memberType || '',
-      nim: data.member.nim || '',
-      phone: data.member.phone || '',
-      address: data.member.address || '',
-      city: data.member.city || '',
-      birthDate: data.member.birthDate || null,
-      gender: data.member.gender || '',
-      about: data.member.about || '',
+      username: '',
+      fullname: '',
+      memberType: '',
+      nim: '',
+      phone: '',
+      address: '',
+      city: '',
+      birthDate: null,
+      gender: '',
+      about: '',
+      studyLevel: data.member?.studyLevel || '', // Tambah ini
+      major: data.member?.major || '',           // Tambah ini
     },
-  })
+  })  
+  
+  const mapDbMemberTypeToString = (type?: string) => {
+    if (!type) return ''
+    return type.toLowerCase()
+  }
+  
+  
+  const mapDbGenderToString = (gender?: string) => {
+    if (!gender) return ''
+    return gender.toLowerCase()
+  }
+  
+  
+  
+  useEffect(() => {
+    if (data) {
+      formPersonal.reset({
+        username: data.username || '',
+        fullname: data.fullname || '',
+        memberType: data.member?.memberType || '',
+        nim: data.member?.nim || '',
+        phone: data.member?.phone || '',
+        address: data.member?.address || '',
+        city: data.member?.city || '',
+        birthDate: data.member?.birthDate || null,
+        gender: data.member?.gender || '',
+        about: data.member?.about || '',
+        studyLevel: data.member?.studyLevel || '',
+        major: data.member?.major || '',
+      })
+    }
+  }, [data, formPersonal])
+  
+  
+  
 
   const formResume = useForm<z.infer<typeof updateMemberSchema>>({
     resolver: zodResolver(updateMemberSchema),
@@ -215,6 +248,13 @@ const EditProfileMember = ({ data }: EditProfileMemberProps) => {
       skills: data.skills || [],
     },
   })
+  
+  useEffect(() => {
+    if (data.skills) {
+      formSkills.reset({ skills: data.skills })
+    }
+  }, [data.skills, formSkills])
+  
 
   const formInterests = useForm<z.infer<typeof updateMemberSchema>>({
     resolver: zodResolver(updateMemberSchema),
@@ -222,6 +262,16 @@ const EditProfileMember = ({ data }: EditProfileMemberProps) => {
       interests: data.interests || [],
     },
   })
+  console.log('Interests dari data:', data.interests)
+console.log('Skills dari data:', data.skills)
+
+  
+  useEffect(() => {
+    if (data.interests) {
+      formInterests.reset({ interests: data.interests })
+    }
+  }, [data.interests, formInterests])
+  
 
   const onSubmitPersonal = (value: z.infer<typeof updateMemberSchema>) => {
     setErrorMessagePersonal('')
@@ -408,39 +458,29 @@ const EditProfileMember = ({ data }: EditProfileMemberProps) => {
               </div>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
                 <div className='space-y-4'>
-                  <FormField
-                    control={formPersonal.control}
-                    name='memberType'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status Pencari Kerja</FormLabel>
-                        <FormControl>
-                          <Select
-                            disabled={isPending}
-                            onValueChange={field.onChange}
-                            value={field.value || ''}
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={field.value || 'Pilih Status'}
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {dataMemberType.map((data) => (
-                                <SelectItem
-                                  key={data}
-                                  value={data.toLowerCase()}
-                                >
-                                  {data}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+  control={formPersonal.control}
+  name="memberType"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Status Pencari Kerja</FormLabel>
+      <FormControl>
+        <select
+          {...field}
+          disabled={formPersonal.formState.isSubmitting}
+          className="border-2 border-gray-100 shadow-sm rounded px-3 py-2 w-full"
+        >
+          <option value="">Pilih Status</option>
+          <option value="alumni unila">Alumni UNILA</option>
+          <option value="mahasiswa unila">Mahasiswa UNILA</option>
+          <option value="alumni non unila">Alumni Non UNILA</option>
+          <option value="mahasiswa non unila">Mahasiswa Non UNILA</option>
+        </select>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
                   <FormField
                     control={formPersonal.control}
                     name='username'
@@ -480,24 +520,80 @@ const EditProfileMember = ({ data }: EditProfileMemberProps) => {
                     )}
                   />
                   <FormField
-                    control={formPersonal.control}
-                    name='nim'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>NPM Unila</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            disabled={formPersonal.formState.isSubmitting}
-                            placeholder='NPM Unila'
-                            className='border-2 border-gray-100 shadow-sm'
-                            type='text'
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+  control={formPersonal.control}
+  name="nim"
+  render={({ field }) => {
+    // Ambil nilai memberType dari form
+    const memberTypeValue = formPersonal.watch('memberType')
+    // Disable jika memberType termasuk non UNILA
+    const isDisabled =
+      memberTypeValue === 'alumni non unila' || memberTypeValue === 'mahasiswa non unila'
+
+    return (
+      <FormItem>
+        <FormLabel>NPM Unila</FormLabel>
+        <FormControl>
+          <Input
+            {...field}
+            disabled={formPersonal.formState.isSubmitting || isDisabled}
+            placeholder="NPM Unila"
+            className="border-2 border-gray-100 shadow-sm"
+            type="text"
+          />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )
+  }}
+/>
+
+                  <FormField
+  control={formPersonal.control}
+  name="studyLevel"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Jenjang Studi</FormLabel>
+      <FormControl>
+        <select
+          {...field}
+          disabled={formPersonal.formState.isSubmitting}
+          className="border-2 border-gray-100 shadow-sm rounded px-3 py-2 w-full"
+        >
+          <option value="">Pilih Jenjang Studi</option>
+          <option value="SMP">SMP</option>
+          <option value="SMA">SMA/SMK Sederajat</option>
+          <option value="D3">D3</option>
+          <option value="S1">S1</option>
+          <option value="S2">S2</option>
+          <option value="S3">S3</option>
+        </select>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
+
+<FormField
+  control={formPersonal.control}
+  name="major"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Jurusan</FormLabel>
+      <FormControl>
+        <Input
+          {...field}
+          disabled={formPersonal.formState.isSubmitting}
+          placeholder="Masukkan jurusan"
+          className="border-2 border-gray-100 shadow-sm"
+          type="text"
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
                   <FormField
                     control={formPersonal.control}
                     name='phone'
@@ -518,38 +614,26 @@ const EditProfileMember = ({ data }: EditProfileMemberProps) => {
                     )}
                   />
                   <FormField
-                    control={formPersonal.control}
-                    name='gender'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Jenis Kelamin</FormLabel>
-                        <FormControl>
-                          <Select
-                            disabled={isPending}
-                            onValueChange={field.onChange}
-                            value={field.value || ''}
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={field.value || 'Pilih Jenis Kelamin'}
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {gender.map((note) => (
-                                <SelectItem
-                                  key={note}
-                                  value={note.toLowerCase()}
-                                >
-                                  {note}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+  control={formPersonal.control}
+  name="gender"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Jenis Kelamin</FormLabel>
+      <FormControl>
+        <select
+          {...field}
+          disabled={formPersonal.formState.isSubmitting}
+          className="border-2 border-gray-100 shadow-sm rounded px-3 py-2 w-full"
+        >
+          <option value="">Pilih Jenis Kelamin</option>
+          <option value="laki-laki">Laki-laki</option>
+          <option value="perempuan">Perempuan</option>
+        </select>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
                 </div>
                 <div className='space-y-4'>
                   <FormField

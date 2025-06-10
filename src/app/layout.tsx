@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Roboto_Mono } from 'next/font/google'
 import './globals.css'
 import Footer from '@/components/layouts/footer'
 import Nav from '@/components/layouts/nav'
@@ -8,14 +8,16 @@ import { currentUser } from '@/lib/authenticate'
 import Sidebar from '@/components/layouts/sidebar'
 import Header from '@/components/utils/Header'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-sans',
   subsets: ['latin'],
+  display: 'swap',
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const robotoMono = Roboto_Mono({
+  variable: '--font-mono',
   subsets: ['latin'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -30,35 +32,25 @@ export default async function RootLayout({
 }>) {
   const user = await currentUser()
   const isLoggedIn = !!user
-  if (user?.role === 'ADMIN') {
-    return (
-      <html lang='en'>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
+
+  return (
+    <html lang='en' className={`${inter.variable} ${robotoMono.variable}`}>
+      <body className='antialiased'>
+        {user?.role === 'ADMIN' ? (
           <div className='flex h-screen bg-gray-100'>
             <Sidebar />
             <div className='flex-1 overflow-auto'>
-              {/* Header */}
               <Header />
               {children}
             </div>
           </div>
-        </body>
-      </html>
-    )
-  }
-
-  return (
-    <html lang='en'>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <SessionProvider>
-          <Nav isLoggedIn={isLoggedIn} />
-          <div className='pt-32'>{children}</div>
-          <Footer />
-        </SessionProvider>
+        ) : (
+          <SessionProvider>
+            <Nav isLoggedIn={isLoggedIn} />
+            <div className='pt-32'>{children}</div>
+            <Footer />
+          </SessionProvider>
+        )}
       </body>
     </html>
   )

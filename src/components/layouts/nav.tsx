@@ -11,40 +11,56 @@ interface NavProps {
 }
 
 const Nav = ({ isLoggedIn }: NavProps) => {
-  const [isOpen, setIsOpen] = useState(false) // State for mobile menu
+  const [isOpen, setIsOpen] = useState(false)
   const toggleMenu = () => setIsOpen(!isOpen)
 
+  const menuItems = isLoggedIn
+    ? [{ label: 'Dashboard', href: '/dashboard' }]
+    : [
+        { label: 'Daftar', href: '/register' },
+        { label: 'Login', href: '/login' },
+      ]
+
   return (
-    <nav className='bg-gradient-to-r from-white to-gray-100 shadow-lg backdrop-blur-md fixed w-full top-0 left-0 z-50'>
-      {/* Header Container */}
-      <div className='flex justify-between items-center px-6 py-4'>
-        {/* Logo */}
-<div className='text-2xl font-bold'>
-  <Link href={'/'} className='text-[#025908] hover:text-[#2a7a2f]'>
-    <img src='/LOGO-CCED.png' alt='Logo CCED' className='h-10' /> {/* Menambahkan logo */}
-  </Link>
-</div>
+    <>
+      <nav className="fixed top-0 left-0 w-full z-50 bg-white/70 backdrop-blur-lg border-b border-gray-200 shadow-sm">
+      <div className="max-w-screen-xl mx-auto flex items-center justify-between px-6 py-5 md:py-6 min-h-[72px]">
 
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3">
+          <img src="/LOGO-CCED.png" className="h-10 sm:h-12 w-auto" />
+          </Link>
 
-        {/* Mobile Menu Button */}
-        <button
-          className='md:hidden block focus:outline-none p-2'
-          onClick={toggleMenu}
-        >
-          <Menu className='text-[#025908]' />
-        </button>
+          {/* Toggle Button */}
+          <button
+            onClick={toggleMenu}
+            className="md:hidden p-2 text-green-800"
+            aria-label="Buka menu"
+            aria-expanded={isOpen}
+          >
+            <Menu className="w-6 h-6" />
+          </button>
 
-        {/* Desktop Navigation */}
-        <DesktopNav isLoggedIn={isLoggedIn} />
-      </div>
+          {/* Desktop */}
+          <DesktopNav items={menuItems} />
+        </div>
+      </nav>
 
-      {/* Mobile Navigation */}
+      {/* Overlay & Mobile Menu */}
       <div
-        className={`md:hidden ${isOpen ? 'block' : 'hidden'} px-6 flex flex-col items-center`}
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity ${
+          isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        } md:hidden`}
+        onClick={() => setIsOpen(false)}
+      />
+      <div
+        className={`fixed top-0 right-0 h-full w-64 bg-white z-50 shadow-lg transform transition-transform ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        } md:hidden`}
       >
-        <MobileNav isLoggedIn={isLoggedIn} />
+        <MobileNav items={menuItems} onClose={() => setIsOpen(false)} />
       </div>
-    </nav>
+    </>
   )
 }
 

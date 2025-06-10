@@ -37,6 +37,7 @@ import {
 import { addNewJob } from '@/actions/company-action'
 import { X } from 'lucide-react'
 import { Textarea } from '../ui/textarea'
+import FormTextArea from '@/components/ui/FormTextArea'
 
 function formatRupiah(value: string) {
   // Menghapus semua karakter selain angka
@@ -54,6 +55,8 @@ const AddJob = () => {
   const [isPending, setIsPending] = useState(false)
   const [applyType, setApplyType] = useState<'internal' | 'external'>('internal')
   const [externalUrl, setExternalUrl] = useState('')
+  const [posterType, setPosterType] = useState<'none' | 'url' | 'file'>('none')
+
 
 
   const form = useForm<z.infer<typeof JobSchema>>({
@@ -68,24 +71,45 @@ const AddJob = () => {
   employmentType: '',
   workTime: '',
   skills: [],
+  posterUrl: '', // ✅ ini sekarang aman
   type: '',
     },
   })
 
-  const onSubmit = (data: z.infer<typeof JobSchema>) => {
-    setErrorMessage('')
-    setSuccessMessage('')
-    startTransition(() => {
-      setIsPending(true)
-      // todo: implement submit logic
-      console.log(data)
-      addNewJob(data).then((data) => {
-        setSuccessMessage(data?.success ?? '')
-        setErrorMessage(data?.error ?? '')
-      })
-      setIsPending(false)
+  const onSubmit = async (data: any) => {
+    const formData = new FormData()
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        formData.append(key, JSON.stringify(value))
+      } else if (value instanceof Date) {
+        formData.append(key, value.toISOString())
+      } else if (typeof value === 'string' || typeof value === 'number') {
+        formData.append(key, value.toString())
+      } else {
+        formData.append(key, '')
+      }
     })
+    
+
+const fileInput = document.querySelector('input[name="posterFile"]') as HTMLInputElement
+formData.append('posterType', posterType)
+
+if (posterType === 'file' && fileInput?.files?.length) {
+  formData.append('posterFile', fileInput.files[0])
+}
+
+formData.append('posterUrl', data.posterUrl ?? '')
+
+
+
+    
+  
+    const result = await addNewJob(formData)
+    setSuccessMessage(result?.success ?? '')
+    setErrorMessage(result?.error ?? '')
   }
+  
 
   const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
   const jobStatus = ['Aktif', 'NonAktif', 'Selesai', 'Draft']
@@ -170,25 +194,13 @@ const AddJob = () => {
       )}
     />
 
-<FormField
-  control={form.control}
+<FormTextArea
   name="description"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Deskripsi</FormLabel>
-      <FormControl>
-        <textarea
-          {...field}
-          disabled={form.formState.isSubmitting}
-          placeholder="Masukkan deskripsi untuk pekerjaan"
-          className="border-2 border-grey-300 shadow-sm w-full p-2 resize-none focus:outline-none focus:ring-2 focus:ring-green-500 rounded-lg" // Menambahkan border-radius
-          value={field.value ?? ''}
-        />
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
+  label="Deskripsi Pekerjaan"
+  placeholder="Contoh:\n- Bertanggung jawab membuat laporan\n- Komunikatif dan teliti"
+  control={form.control}
 />
+
 
 
 
@@ -452,6 +464,62 @@ const AddJob = () => {
 />
 
 )}
+{/* Form Pilihan Tipe Poster */}
+<FormItem>
+  <FormLabel>Tipe Poster</FormLabel>
+  <Select
+    value={posterType}
+    onValueChange={(val) => setPosterType(val as 'none' | 'url' | 'file')}
+    disabled={form.formState.isSubmitting}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Pilih metode poster" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="none">Tanpa Poster</SelectItem>
+      <SelectItem value="url">Link Poster (URL)</SelectItem>
+      <SelectItem value="file">Upload File Poster</SelectItem>
+    </SelectContent>
+  </Select>
+</FormItem>
+
+{/* Jika memilih Link Poster */}
+{posterType === 'url' && (
+  <FormField
+    control={form.control}
+    name="posterUrl"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Link Poster (URL)</FormLabel>
+        <FormControl>
+          <Input
+            {...field}
+            placeholder="https://example.com/poster.jpg"
+            disabled={form.formState.isSubmitting}
+            className="border-2 border-gray-100 shadow-sm"
+          />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+)}
+
+{/* Jika memilih Upload File Poster */}
+{posterType === 'file' && (
+  <div className="space-y-2">
+    <FormLabel>Upload Poster</FormLabel>
+    <input
+      type="file"
+      name="posterFile"
+      accept="image/*"
+      className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+      required
+    />
+    <p className="text-sm text-gray-500">File gambar (.jpg, .png, dll)</p>
+  </div>
+)}
+
 
 
               {errorMessage && <FormError message={errorMessage} />}

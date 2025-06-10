@@ -19,21 +19,9 @@ enum Role {
   COMPANY
 }
 
-enum Gender {
-  MALE
-  FEMALE
-}
-
-enum MemberType {
-  ALUMNI_UNILA
-  MAHASISWA_UNILA
-  ALUMNI_NON_UNILA
-  MAHASISWA_NON_UNILA
-}
-
 model User {
   id            String    @id @default(cuid())
-  username      String? @unique
+  username      String?   @unique
   fullname      String?
   email         String    @unique
   emailVerified DateTime?
@@ -46,7 +34,7 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   image File? @relation(fields: [imageId], references: [id], onDelete: SetNull)
 }
 
@@ -81,20 +69,23 @@ model File {
   updatedAt DateTime @updatedAt
 
   berkasForCompany Company? @relation("BerkasFile")
-  companyLogo Company?
-  userImage   User?
+  companyLogo      Company?
+  userImage        User?
+
+  // ✅ ini tambahan relasi balik dari Job
+  jobPoster Job? @relation("JobPoster")
 }
 
 model Company {
   id               String   @id @default(uuid())
   userId           String   @unique
   logoId           String   @unique
-  berkasId         String?   @unique 
+  berkasId         String?  @unique
   companyName      String
   industry         String
   ownership        String
   phone            String
-  companyPhone     String @unique
+  companyPhone     String   @unique
   website          String
   publicMail       String
   bio              String
@@ -109,27 +100,32 @@ model Company {
 
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   logo            File?             @relation(fields: [logoId], references: [id], onDelete: Cascade)
-  berkas           File?             @relation("BerkasFile", fields: [berkasId], references: [id], onDelete: Cascade)
+  berkas          File?             @relation("BerkasFile", fields: [berkasId], references: [id], onDelete: Cascade)
   RequestVerified RequestVerified[]
 }
 
 model Member {
-  id         String     @id @default(uuid())
-  userId     String     @unique
-  memberType MemberType
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  memberType String
   nim        String
   phone      String
   address    String?
   city       String?
   birthDate  DateTime?
-  gender     Gender?
+  gender     String?
   about      String?
   skills     String[]
   interests  String[]
   resume     String?
-  cv         String?   
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  cv         String?
+
+  studyLevel String? // tambahan jenjang studi
+  major      String? // tambahan jurusan
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   experience     Experience[]
   education      Education[]
   assessment     Assessment[]
@@ -212,25 +208,32 @@ enum WorkTime {
 }
 
 model Job {
-  id           String    @id @default(uuid())
-  companyId    String
-  title        String
-  description  String 
-  salary       String
-  employmentType String? // Pekerja Tetap, Kontrak, Magang
-  workTime       String? // Full Time, Part Time
-  requirements String[]
-  location     String?
-  deadline     DateTime?
-  status       String?
-  skills       String[]
-  type         String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id             String    @id @default(uuid())
+  companyId      String
+  title          String
+  description    String
+  salary         String
+  employmentType String?
+  workTime       String?
+  requirements   String[]
+  location       String?
+  deadline       DateTime?
+  status         String?
+  skills         String[]
+  type           String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
+  // Opsi poster
+  posterUrl    String?
+  posterFileId String? @unique
+  posterFile   File?   @relation("JobPoster", fields: [posterFileId], references: [id], onDelete: SetNull)
+
+  // Relasi lain
   jobApplication JobApplication[]
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@index([posterFileId])
 }
 
 model JobApplication {

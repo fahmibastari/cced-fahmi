@@ -3,7 +3,6 @@
 import { saveFile } from '@/lib/file-handler'
 import prisma from '@/lib/prisma'
 import { JobApplicationSchema, updateMemberSchema } from '@/lib/zod'
-import { Gender, MemberType } from '@prisma/client'
 import * as z from 'zod'
 
 export const applyJob = async (
@@ -12,12 +11,10 @@ export const applyJob = async (
   value: z.infer<typeof JobApplicationSchema>
 ) => {
   try {
-    // Validasi input
     if (!jobId || !userId) {
       return { error: 'Parameter yang dibutuhkan hilang' }
     }
 
-    // Validasi data form
     const validatedFields = JobApplicationSchema.safeParse(value)
     if (!validatedFields.success) {
       const errorMessages = validatedFields.error.issues
@@ -29,41 +26,19 @@ export const applyJob = async (
     const { data } = validatedFields
     const { notes } = data
 
-    // Cek apakah lowongan ada
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
-    })
+    const job = await prisma.job.findUnique({ where: { id: jobId } })
+    if (!job) return { error: 'Lowongan tidak ditemukan' }
 
-    if (!job) {
-      return { error: 'Lowongan tidak ditemukan' }
-    }
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user) return { error: 'Pencari kerja tidak ditemukan' }
 
-    // Cek apakah pencari kerja ada
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    })
+    const member = await prisma.member.findUnique({ where: { userId: user.id } })
 
-    if (!user) {
-      return { error: 'Pencari kerja tidak ditemukan' }
-    }
-
-    const member = await prisma.member.findUnique({
-      where: { userId: user.id },
-    })
-
-    // Cek apakah aplikasi sudah ada
     const existingApplication = await prisma.jobApplication.findFirst({
-      where: {
-        jobId,
-        memberId: member?.id,
-      },
+      where: { jobId, memberId: member?.id },
     })
+    if (existingApplication) return { error: 'Anda sudah melamar untuk lowongan ini' }
 
-    if (existingApplication) {
-      return { error: 'Anda sudah melamar untuk lowongan ini' }
-    }
-
-    // Buat aplikasi lowongan
     await prisma.jobApplication.create({
       data: {
         jobId,
@@ -73,13 +48,10 @@ export const applyJob = async (
       },
     })
 
-    return {
-      success: 'Aplikasi lowongan berhasil diajukan!',
-    }
+    return { success: 'Aplikasi lowongan berhasil diajukan!' }
   } catch {
     return {
-      error:
-        'Terjadi kesalahan saat mengajukan aplikasi lowongan. Silakan coba lagi nanti.',
+      error: 'Terjadi kesalahan saat mengajukan aplikasi lowongan. Silakan coba lagi nanti.',
     }
   }
 }
@@ -98,9 +70,7 @@ export const getDetailUserMemberFull = async (id: string) => {
             jobApplication: {
               include: {
                 job: {
-                  include: {
-                    company: true,
-                  },
+                  include: { company: true },
                 },
               },
             },
@@ -128,6 +98,7 @@ export async function updateMemberPersonalInformation(
         details: validatedFields.error.errors,
       }
     }
+
     const {
       username,
       fullname,
@@ -142,46 +113,35 @@ export async function updateMemberPersonalInformation(
       resume,
       skills,
       interests,
+      studyLevel,
+      major,
     } = validatedFields.data
 
     await prisma.user.update({
-      where: { id: id },
-      data: {
-        username: username,
-        fullname: fullname,
-      },
+      where: { id },
+      data: { username, fullname },
     })
-    const kelamin = gender === 'laki-laki' ? Gender.MALE : Gender.FEMALE
-    let dataMemberType = null
-    if (memberType === 'alumni unila') {
-      dataMemberType = MemberType.ALUMNI_UNILA
-    } else if (memberType === 'alumni non unila') {
-      dataMemberType = MemberType.ALUMNI_NON_UNILA
-    } else if (memberType === 'mahasiswa non unila') {
-      dataMemberType = MemberType.MAHASISWA_NON_UNILA
-    } else {
-      dataMemberType = MemberType.MAHASISWA_UNILA
-    }
 
     await prisma.member.update({
       where: { id: idMember },
       data: {
-        phone: phone,
-        address: address,
-        city: city,
-        birthDate: birthDate,
-        gender: kelamin,
-        about: about,
-        memberType: dataMemberType,
-        nim: nim,
-        resume: resume,
-        skills: skills,
-        interests: interests,
+        phone,
+        address,
+        city,
+        birthDate,
+        gender,
+        about,
+        memberType,
+        nim,
+        resume,
+        skills,
+        interests,
+        studyLevel: studyLevel || '',
+        major: major || '',
       },
     })
-    return {
-      success: 'Pencari kerja berhasil diperbarui!',
-    }
+
+    return { success: 'Pencari kerja berhasil diperbarui!' }
   } catch {
     return {
       error: 'Terjadi kesalahan saat memperbarui pencari kerja. Silakan coba lagi.',
@@ -191,30 +151,22 @@ export async function updateMemberPersonalInformation(
 
 export const updateCvMember = async (id: string, cv: File) => {
   try {
-    if (!cv) {
-      return { error: 'File CV diperlukan' };
-    }
+    if (!cv) return { error: 'File CV diperlukan' }
 
-    // Menyimpan file dan mendapatkan URL file
-    const cvFile = await saveFile('member-cvs', cv);
-    if (!cvFile) {
-      return { error: 'File CV tidak valid atau tidak bisa disimpan' };
-    }
+    const cvFile = await saveFile('member-cvs', cv)
+    if (!cvFile) return { error: 'File CV tidak valid atau tidak bisa disimpan' }
 
-    // Memperbarui kolom `cv` di tabel `member` berdasarkan userId = id
     await prisma.member.update({
-      where: { userId: id }, // Pastikan `userId` adalah field yang benar
-      data: { cv: cvFile.src }, // Menyimpan URL file di kolom `cv`
-    });
+      where: { userId: id },
+      data: { cv: cvFile.src },
+    })
 
-    return { success: 'CV berhasil diperbarui!' };
+    return { success: 'CV berhasil diperbarui!' }
   } catch (err) {
-    console.error('Terjadi kesalahan saat memperbarui CV:', err);
-    return {
-      error: 'Terjadi kesalahan tak terduga saat memperbarui CV profil.',
-    };
+    console.error('Terjadi kesalahan saat memperbarui CV:', err)
+    return { error: 'Terjadi kesalahan tak terduga saat memperbarui CV profil.' }
   }
-};
+}
 
 export const updateImageMember = async (
   id: string,
@@ -222,41 +174,24 @@ export const updateImageMember = async (
   image: File
 ) => {
   try {
-    if (!image) {
-      return { error: 'File gambar diperlukan' }
-    }
+    if (!image) return { error: 'File gambar diperlukan' }
 
     const imageFile = await saveFile('member-images', image)
-    if (!imageFile) {
-      return { error: 'File gambar tidak valid atau tidak bisa disimpan' }
-    }
+    if (!imageFile) return { error: 'File gambar tidak valid atau tidak bisa disimpan' }
 
-    // Mengecek apakah gambar yang sudah ada ada
-    const existingImage = await prisma.file.findUnique({
-      where: { id: idFile },
-    })
-
-    // Menghapus gambar yang sudah ada jika ada
+    const existingImage = await prisma.file.findUnique({ where: { id: idFile } })
     if (existingImage) {
-      await prisma.file.delete({
-        where: { id: idFile },
-      })
+      await prisma.file.delete({ where: { id: idFile } })
     }
 
-    // Memperbarui referensi gambar pengguna di database
     await prisma.user.update({
       where: { id },
-      data: {
-        imageId: imageFile.id,
-      },
+      data: { imageId: imageFile.id },
     })
 
     return { success: 'Gambar profil berhasil diperbarui!' }
   } catch (err) {
     console.error('Terjadi kesalahan saat memperbarui gambar:', err)
-    return {
-      error: 'Terjadi kesalahan tak terduga saat memperbarui gambar profil.',
-    }
+    return { error: 'Terjadi kesalahan tak terduga saat memperbarui gambar profil.' }
   }
 }
-

@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import DataNotFound from './DataNotFound'
-import JobCard from './JobCard'
-import Search from './Search'
 import { Job } from '@prisma/client'
 import { deleteJob } from '@/actions/company-action'
+import Search from './Search'
 import NavMenu from './NavMenu'
+import JobCard from './JobCard'
+import DataNotFound from './DataNotFound'
 
 interface DashboardCompanyProps {
   jobs: Job[]
@@ -15,8 +15,8 @@ interface DashboardCompanyProps {
 const DashboardCompany = ({ jobs }: DashboardCompanyProps) => {
   const [jobsData, setJobsData] = useState<Job[]>(jobs)
   const [filter, setFilter] = useState<string>('all')
-  
-  console.log(jobsData);
+  const [searchTerm, setSearchTerm] = useState('')
+
   const handleClickDelete = async (id: string) => {
     const updatedJobs = jobsData.filter((job) => job.id !== id)
     setJobsData(updatedJobs)
@@ -25,70 +25,84 @@ const DashboardCompany = ({ jobs }: DashboardCompanyProps) => {
 
   const applyFilter = () => {
     const now = Date.now()
-  
+
     const updatedJobs = jobsData.map((job) => {
       const deadlineTime =
         typeof job.deadline === 'string'
           ? new Date(job.deadline).getTime()
           : job.deadline?.getTime()
-  
+
       if (job.status === 'aktif' && deadlineTime && deadlineTime < now) {
         return { ...job, status: 'nonaktif' }
       }
       return job
     })
-  
-    switch (filter) {
-      case 'aktif':
-        return updatedJobs.filter((job) => job.status === 'aktif')
-      case 'nonaktif':
-        return updatedJobs.filter((job) => job.status === 'nonaktif')
-      case 'selesai':
-        return updatedJobs.filter((job) => job.status === 'selesai')
-      case 'draft':
-        return updatedJobs.filter((job) => job.status === 'draft')
-      default:
-        return updatedJobs
-    }
+
+    return updatedJobs.filter((job) => {
+      const matchStatus =
+        filter === 'all' || job.status === filter
+
+        const matchSearch =
+        job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (job.status ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+      
+
+
+      return matchStatus && matchSearch
+    })
   }
-  
-  
-  
 
   const jobsDataFiltered = applyFilter()
 
   return (
-    <div>
-      <hr className='h-1 w-full' />
-      <Search />
-      <hr className='h-1 w-full' />
-      <NavMenu
-        handleClickAll={() => setFilter('all')}
-        handleClickActive={() => setFilter('aktif')}
-        handleClickNonActive={() => setFilter('nonaktif')}
-        handleClickDone={() => setFilter('selesai')}
-        handleClickDraft={() => setFilter('draft')}
-      />
-      <div className='container mx-auto p-4'>
-        {jobsDataFiltered.length > 0 ? (
-          <div className='flex flex-wrap justify-center gap-4'>
-            {jobsDataFiltered.map((job) => (
-              <JobCard
-                key={job.id}
-                title={job.title}
-                id={job.id}
-                status={job.status || ''}
-                location={job.location || ''}
-                createdAt={job.createdAt.toLocaleDateString()}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                jobApplication={(job as any).jobApplication || []}
-                handleDelete={() => handleClickDelete(job.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <DataNotFound />
-        )}
+    <div className="min-h-screen bg-white">
+      <hr className="h-[2px] w-full bg-gray-200" />
+      <div className="py-6 px-4 max-w-7xl mx-auto">
+        <div className="mb-4">
+          {/* Input Search */}
+          <input
+            type="text"
+            placeholder="Cari berdasarkan judul, lokasi, atau status..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full sm:w-96 border border-gray-300 rounded-full px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+
+        {/* Filter Menu */}
+        <NavMenu
+          handleClickAll={() => setFilter('all')}
+          handleClickActive={() => setFilter('aktif')}
+          handleClickNonActive={() => setFilter('nonaktif')}
+          handleClickDone={() => setFilter('selesai')}
+          handleClickDraft={() => setFilter('draft')}
+        />
+
+        {/* Job List */}
+        <div className="mt-6">
+          {jobsDataFiltered.length > 0 ? (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {jobsDataFiltered.map((job) => (
+                <JobCard
+                  key={job.id}
+                  id={job.id}
+                  title={job.title}
+                  location={job.location || ''}
+                  createdAt={job.createdAt.toLocaleDateString('id-ID')}
+                  status={job.status || ''}
+                  jobApplication={(job as any).jobApplication || []}
+                  handleDelete={() => handleClickDelete(job.id)}
+                  applyType={job.type?.trim() ? 'external' : 'internal'} // ← ini penting
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-10">
+              <DataNotFound />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

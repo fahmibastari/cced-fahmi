@@ -11,6 +11,21 @@ import * as z from 'zod'
 import { getUserByEmail } from '@/data/user'
 import { Role } from '@prisma/client'
 
+function convertMemberTypeToString(type: string): string {
+  switch (type) {
+    case 'ALUMNI_UNILA':
+      return 'alumni unila'
+    case 'MAHASISWA_UNILA':
+      return 'mahasiswa unila'
+    case 'ALUMNI_NON_UNILA':
+      return 'alumni non unila'
+    case 'MAHASISWA_NON_UNILA':
+      return 'mahasiswa non unila'
+    default:
+      return ''
+  }
+}
+
 export const registerMember = async (value: z.infer<typeof memberSchema>) => {
   const validatedFields = memberSchema.safeParse(value)
   if (!validatedFields.success) {
@@ -19,8 +34,18 @@ export const registerMember = async (value: z.infer<typeof memberSchema>) => {
 
   const { data } = validatedFields
 
-  const { username, fullname, email, password, role, memberType, nim, phone } =
-    data
+  const {
+    username,
+    fullname,
+    email,
+    password,
+    role,
+    memberType,
+    nim,
+    phone,
+    studyLevel,
+    major,
+  } = data
 
   const emailExists = await getUserByEmail(email)
   if (emailExists) {
@@ -28,9 +53,9 @@ export const registerMember = async (value: z.infer<typeof memberSchema>) => {
   }
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10)
-  const emailVerified = role === 'MEMBER' ? new Date(Date.now()) : null;
+  const emailVerified = role === 'MEMBER' ? new Date(Date.now()) : null
 
-  // Membuat pencari kerja
+  // Membuat user baru
   const user = await prisma.user.create({
     data: {
       username,
@@ -42,14 +67,21 @@ export const registerMember = async (value: z.infer<typeof memberSchema>) => {
     },
   })
 
+  // Convert memberType ke string biasa
+  const memberTypeString = convertMemberTypeToString(memberType)
+
+  // Membuat member baru dengan memberType string
   await prisma.member.create({
     data: {
       userId: user.id,
-      memberType,
+      memberType: memberTypeString,
       nim: nim ?? '',
       phone,
+      studyLevel: studyLevel ?? '',
+      major: major ?? '',
     },
   })
+
   const verificationToken = await generateVerificationToken(email)
   await sendVerificationEmail(verificationToken.email, verificationToken.token)
 
@@ -61,7 +93,6 @@ export const registerMember = async (value: z.infer<typeof memberSchema>) => {
 }
 
 export const registerCompany = async (value: z.infer<typeof companySchema>) => {
-  // Validasi input
   const validatedFields = companySchema.safeParse(value)
   if (!validatedFields.success) {
     return { error: 'Harap lengkapi semua kolom' }
@@ -86,7 +117,6 @@ export const registerCompany = async (value: z.infer<typeof companySchema>) => {
     berkas,
   } = data
 
-  // Parallel tasks (cek email, simpan logo dan berkas)
   const [emailExists, logoFile, berkasFile] = await Promise.all([
     getUserByEmail(email),
     logo ? saveFile('company-logos', logo) : undefined,
@@ -97,7 +127,6 @@ export const registerCompany = async (value: z.infer<typeof companySchema>) => {
     return { error: 'Email sudah terdaftar' }
   }
 
-  // Pastikan berkas dan logo ada
   if (!berkasFile) {
     return { error: 'Berkas diperlukan' }
   }
@@ -106,11 +135,9 @@ export const registerCompany = async (value: z.infer<typeof companySchema>) => {
     return { error: 'Logo diperlukan' }
   }
 
-  // Hash password dengan rounds lebih rendah (8 lebih cepat)
   const hashedPassword = await bcrypt.hash(password, 8)
 
   try {
-    // Membuat pencari kerja di database
     const user = await prisma.user.create({
       data: {
         username,
@@ -121,7 +148,6 @@ export const registerCompany = async (value: z.infer<typeof companySchema>) => {
       },
     })
 
-    // Membuat penyedia kerja
     await prisma.company.create({
       data: {
         userId: user.id,
@@ -138,13 +164,9 @@ export const registerCompany = async (value: z.infer<typeof companySchema>) => {
       },
     })
 
-    // Menghasilkan token verifikasi email
     const verificationToken = await generateVerificationToken(email)
-
-    // Mengirimkan email verifikasi
     await sendVerificationEmail(verificationToken.email, verificationToken.token)
 
-    // Kembali dengan respons sukses
     return {
       success: true,
       message: 'Akun berhasil dibuat, silahkan tunggu admin mengverifikasi akun anda.',
@@ -171,19 +193,17 @@ export const registerAdmin = async (value: z.infer<typeof userSchema>) => {
   if (emailExists) {
     return { error: 'Email sudah terdaftar' }
   }
-  // Hash password
+
   const hashedPassword = await bcrypt.hash(password, 10)
   try {
-    const emailVerified = role === 'MEMBER' ? new Date(Date.now()) : null;
-    // Membuat pencari kerja
+    const emailVerified = role === 'MEMBER' ? new Date(Date.now()) : null
     await prisma.user.create({
-
       data: {
         username,
         fullname,
         email,
         password: hashedPassword,
-        emailVerified, 
+        emailVerified,
         role: role as Role,
       },
     })

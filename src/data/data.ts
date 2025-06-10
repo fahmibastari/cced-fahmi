@@ -56,6 +56,7 @@ export async function getJobs() {
             logo: true,  // Include the logo file
           },
         },
+        posterFile: true,
       },
     });
 

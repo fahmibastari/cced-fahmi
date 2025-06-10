@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { memberSchema } from '@/lib/zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { startTransition, useState } from 'react'
+import { startTransition, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { FormSuccess } from '../form-succsess'
@@ -57,8 +57,15 @@ const MembershipForm = ({ onBack, data }: MembershipFormProps) => {
       memberType: memberType || 'MAHASISWA_UNILA',
       nim: '',
       phone: '',
+      studyLevel: '',
+      major: '',
     },
   })
+
+  // Sync state memberType dengan form field memberType
+  useEffect(() => {
+    form.setValue('memberType', memberType)
+  }, [memberType, form])
 
   const handleSubmit = (data: z.infer<typeof memberSchema>) => {
     setErrorMessage('')
@@ -74,7 +81,7 @@ const MembershipForm = ({ onBack, data }: MembershipFormProps) => {
         setSuccessMessage(data?.message ?? '')
         setIsPending(false)
         setTimeout(() => {
-          router.push('/login') 
+          router.push('/login')
         }, 1000)
       })
     })
@@ -82,12 +89,12 @@ const MembershipForm = ({ onBack, data }: MembershipFormProps) => {
 
   return (
     <CardWrapper
-  headerLabel='Daftar'
-  description='Isi formulir di bawah ini untuk membuat akun'
-  paragraphSwitchButton='Sudah punya akun? '
-  switchButtonLabel='Masuk'
-  switchButtonHref='/login'
->
+      headerLabel='Daftar'
+      description='Isi formulir di bawah ini untuk membuat akun'
+      paragraphSwitchButton='Sudah punya akun? '
+      switchButtonLabel='Masuk'
+      switchButtonHref='/login'
+    >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
           <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
@@ -127,10 +134,14 @@ const MembershipForm = ({ onBack, data }: MembershipFormProps) => {
                   <FormControl>
                     <Input
                       {...field}
-                      disabled={form.formState.isSubmitting || (memberType === 'ALUMNI_NON_UNILA' || memberType === 'MAHASISWA_NON_UNILA')}
-                      placeholder="Masukkan NPM Unila"
-                      className="border-2 border-gray-100 shadow-sm"
-                      type="text"
+                      disabled={
+                        form.formState.isSubmitting ||
+                        memberType === 'ALUMNI_NON_UNILA' ||
+                        memberType === 'MAHASISWA_NON_UNILA'
+                      }
+                      placeholder='Masukkan NPM Unila'
+                      className='border-2 border-gray-100 shadow-sm'
+                      type='text'
                     />
                   </FormControl>
                   <FormMessage />
@@ -147,9 +158,53 @@ const MembershipForm = ({ onBack, data }: MembershipFormProps) => {
                     <Input
                       {...field}
                       disabled={form.formState.isSubmitting}
-                      placeholder="Nomor telepon"
-                      className="border-2 border-gray-100 shadow-sm"
-                      type="text"
+                      placeholder='Nomor telepon'
+                      className='border-2 border-gray-100 shadow-sm'
+                      type='text'
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='studyLevel'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Jenjang Studi</FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      disabled={form.formState.isSubmitting}
+                      className='border-2 border-gray-100 shadow-sm rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent'
+                    >
+                      <option value=''>Pilih Jenjang Studi</option>
+                      <option value='SMP'>SMP</option>
+                      <option value='SMA'>SMA/SMK Sederajat</option>
+                      <option value='D3'>D3</option>
+                      <option value='S1'>S1</option>
+                      <option value='S2'>S2</option>
+                      <option value='S3'>S3</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='major'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Jurusan</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      disabled={form.formState.isSubmitting}
+                      placeholder='Masukkan jurusan'
+                      className='border-2 border-gray-100 shadow-sm'
+                      type='text'
                     />
                   </FormControl>
                   <FormMessage />
@@ -158,19 +213,19 @@ const MembershipForm = ({ onBack, data }: MembershipFormProps) => {
             />
             {errorMessage && <FormError message={errorMessage} />}
             {successMessage && <FormSuccess message={successMessage} />}
-            <div className="flex justify-between pt-4">
+            <div className='flex justify-between pt-4'>
               <Button
-                type="button"
+                type='button'
                 disabled={form.formState.isSubmitting || isPending}
-                className="w-full bg-slate-500 text-white hover:bg-slate-600 mx-6"
+                className='w-full bg-slate-500 text-white hover:bg-slate-600 mx-6'
                 onClick={onBack}
               >
                 {isPending ? 'Loading...' : 'Kembali'}
               </Button>
               <Button
-                type="submit"
+                type='submit'
                 disabled={form.formState.isSubmitting || isPending}
-                className="w-full bg-green-500 text-white hover:bg-green-600 mx-6"
+                className='w-full bg-green-500 text-white hover:bg-green-600 mx-6'
               >
                 {isPending ? 'Loading...' : 'Lanjut'}
               </Button>

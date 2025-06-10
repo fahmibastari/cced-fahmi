@@ -16,6 +16,36 @@ export const getUsers = async () => {
     return null
   }
 }
+// Fungsi untuk login sebagai perusahaan
+export const impersonateAsCompany = async (adminId: string, companyId: string) => {
+  try {
+    // Pastikan admin valid
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId },
+    })
+
+    if (!admin || admin.role !== 'ADMIN') {
+      return { error: 'Unauthorized' }
+    }
+
+    // Ambil data perusahaan
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+    })
+
+    if (!company) {
+      return { error: 'Company not found' }
+    }
+
+    // Simulasi login sebagai perusahaan dengan data perusahaan
+    // Bisa juga mengarahkan ke halaman perusahaan atau mengubah sesi
+    return { success: 'Successfully impersonated as company' }
+  } catch (error) {
+    console.error(error)
+    return { error: 'An error occurred' }
+  }
+}
+
 
 export const getUsersWithBerkas = async () => {
   try {

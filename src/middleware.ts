@@ -18,7 +18,7 @@ const { auth } = NextAuth(authConfig)
 export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
-  const { pathname } = req.nextUrl
+  const { pathname } = nextUrl
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix)
   const isApiPublicRoute = nextUrl.pathname.startsWith(apiPublicPrefix)
@@ -28,7 +28,6 @@ export default auth((req) => {
   const iskegiatanRoute = nextUrl.pathname.startsWith(kegiatanPrefix)
   const isAssessmentRoute = nextUrl.pathname.startsWith(assessmentPrefix)
   const isAboutRoute = nextUrl.pathname.startsWith(aboutPrefix)
-
   const isJobDetailRoute = nextUrl.pathname.startsWith('/jobs')
 
   // Allow spesific admin

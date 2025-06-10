@@ -18,6 +18,32 @@ export default async function Page() {
 
   if (user?.role === Role.MEMBER) {
     const objData = await getJobs()
-    return <DashboardMember jobs={objData?.data} user={user} />
+    
+    return (
+      <DashboardMember
+  user={user}
+  jobs={(objData?.data ?? []).map((job) => ({
+    ...job,
+    companyName: job.company?.companyName ?? 'Nama Perusahaan',
+    companyLogoUrl: job.company?.logo?.src ?? '',
+    status: job.status ?? 'aktif',
+    location: job.location ?? '',
+    salary: job.salary ?? '',
+    type: job.type ?? '',
+    deadline:
+      job.deadline ??
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+
+    // ⬇️ Ini yang paling penting
+    company: {
+      companyName: job.company?.companyName ?? '',
+      logo: job.company?.logo?.src ? { src: job.company.logo.src } : undefined,
+    },
+  }))}
+/>
+
+    )
+    
+
   }
 }
