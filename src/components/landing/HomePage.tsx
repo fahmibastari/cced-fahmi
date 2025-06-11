@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma'
 import Link from 'next/link'
 import { Button } from '../ui/button'
 import HomePageClient from './HomePageClient'
+import FAQ from '../FAQ'
+import { faqData } from '@/data/faq'
 
 export default async function HomePage() {
   const session = await auth()
@@ -93,10 +95,17 @@ export default async function HomePage() {
 
 
       {/* CTA */}
-      <div className="text-center mt-10 mb-20">
+      <div className="text-center mb-20">
         <Button asChild size="lg">
           <Link href={lihatSemuaHref}>Lihat Semua Lowongan</Link>
         </Button>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-16">
+      <h1 className="text-4xl font-bold mb-12 text-green-800">
+    Frequently Asked Questions
+  </h1>
+  <FAQ data={faqData} />
       </div>
     </div>
   )
