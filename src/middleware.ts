@@ -1,5 +1,7 @@
-import authConfig from './auth.config'
-import NextAuth from 'next-auth'
+// src/middleware.ts
+
+import { getToken } from 'next-auth/jwt'
+import { NextRequest, NextResponse } from 'next/server'
 import {
   apiAuthPrefix,
   publicRoutes,
@@ -13,64 +15,50 @@ import {
   adminRoutes,
 } from './routes'
 
-const { auth } = NextAuth(authConfig)
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
+  const token = await getToken({ req })
+  const isLoggedIn = !!token
 
-export default auth((req) => {
-  const { nextUrl } = req
-  const isLoggedIn = !!req.auth
-  const { pathname } = nextUrl
+  const isApiAuthRoute = pathname.startsWith(apiAuthPrefix)
+  const isApiPublicRoute = pathname.startsWith(apiPublicPrefix)
+  const isPublicRoute = publicRoutes.includes(pathname)
+  const isAuthRoute = authRoutes.includes(pathname)
+  const isBlogRoute = pathname.startsWith(blogPrefix)
+  const iskegiatanRoute = pathname.startsWith(kegiatanPrefix)
+  const isAssessmentRoute = pathname.startsWith(assessmentPrefix)
+  const isAboutRoute = pathname.startsWith(aboutPrefix)
+  const isJobDetailRoute = pathname.startsWith('/jobs')
 
-  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix)
-  const isApiPublicRoute = nextUrl.pathname.startsWith(apiPublicPrefix)
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname)
-  const isAuthRoute = authRoutes.includes(nextUrl.pathname)
-  const isBlogRoute = nextUrl.pathname.startsWith(blogPrefix)
-  const iskegiatanRoute = nextUrl.pathname.startsWith(kegiatanPrefix)
-  const isAssessmentRoute = nextUrl.pathname.startsWith(assessmentPrefix)
-  const isAboutRoute = nextUrl.pathname.startsWith(aboutPrefix)
-  const isJobDetailRoute = nextUrl.pathname.startsWith('/jobs')
+  if (pathname === adminRoutes) return NextResponse.next()
 
-  // Allow spesific admin
-  if (pathname === adminRoutes) return
-
-  // Allow blog, kegiatan, assessment, about, public API, and auth API routes
   if (
+    isApiAuthRoute ||
+    isApiPublicRoute ||
     isBlogRoute ||
     iskegiatanRoute ||
     isAssessmentRoute ||
-    isAboutRoute ||
-    isApiPublicRoute ||
-    isApiAuthRoute
+    isAboutRoute
   ) {
-    return
+    return NextResponse.next()
   }
 
-  // Allow public routes
-  if (isPublicRoute) return
+  if (isPublicRoute || isJobDetailRoute) return NextResponse.next()
 
-  // ✅ Allow access to /jobs and /jobs/[id]
-  if (isJobDetailRoute) return
-
-  // Redirect logged-in users trying to access auth routes
-  if (isAuthRoute) {
-    if (isLoggedIn) {
-      return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
-    }
-    return
+  if (isAuthRoute && isLoggedIn) {
+    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, req.url))
   }
 
-  // Protect all other routes
   if (!isLoggedIn) {
-    return Response.redirect(new URL('/login', nextUrl))
+    return NextResponse.redirect(new URL('/login', req.url))
   }
 
-  return
-})
+  return NextResponse.next()
+}
 
 export const config = {
   matcher: [
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/(api|trpc)(.*)',
   ],
-  runtime: 'nodejs',
 }

@@ -1,4 +1,5 @@
-export const runtime = 'nodejs' // ✅ Tambahkan ini
+// src/auth.config.ts
+export const runtime = 'nodejs'
 
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcrypt'
