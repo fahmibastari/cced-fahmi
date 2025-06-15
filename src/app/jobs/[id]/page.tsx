@@ -1,10 +1,15 @@
-// src/app/jobs/[id]/page.tsx
-
 import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import JobDetailPublic from '@/components/public/JobDetailPublic'
 
-export default async function JobDetailPage({ params }: { params: { id: string } }) {
+// ✅ Gunakan interface agar cocok dengan Next.js App Router typing
+interface PageProps {
+  params: {
+    id: string
+  }
+}
+
+export default async function JobDetailPage({ params }: PageProps) {
   const { id } = params
 
   const job = await prisma.job.findUnique({
@@ -25,6 +30,3 @@ export default async function JobDetailPage({ params }: { params: { id: string }
 
   return <JobDetailPublic job={job} />
 }
-
-// ✅ Add this so Next.js knows this page is server-rendered
-export const dynamic = 'force-dynamic'
