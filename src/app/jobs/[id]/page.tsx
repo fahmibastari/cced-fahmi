@@ -2,18 +2,18 @@ import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import JobDetailPublic from '@/components/public/JobDetailPublic'
 
-// ✅ Gunakan interface agar cocok dengan Next.js App Router typing
-interface PageProps {
-  params: {
-    id: string
-  }
+// ✅ gunakan type di luar function
+type Params = {
+  id: string
 }
 
-export default async function JobDetailPage({ params }: PageProps) {
-  const { id } = params
-
+export default async function JobDetailPage({
+  params,
+}: {
+  params: Params
+}) {
   const job = await prisma.job.findUnique({
-    where: { id },
+    where: { id: params.id },
     include: {
       company: {
         include: {
@@ -24,9 +24,7 @@ export default async function JobDetailPage({ params }: PageProps) {
     },
   })
 
-  if (!job) {
-    notFound()
-  }
+  if (!job) notFound()
 
   return <JobDetailPublic job={job} />
 }
