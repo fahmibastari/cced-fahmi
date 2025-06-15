@@ -23,3 +23,8 @@ export default async function JobDetailPage({
 
   return <JobDetailPublic job={job} />
 }
+
+// ✅ Tambahkan ini untuk membuat Next.js tahu param valid
+export async function generateStaticParams() {
+  return []
+}
