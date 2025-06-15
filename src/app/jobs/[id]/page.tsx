@@ -2,31 +2,26 @@ import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import JobDetailPublic from '@/components/public/JobDetailPublic'
 
-type Props = {
+type PageProps = {
   params: {
     id: string
   }
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params }: PageProps) {
   const job = await prisma.job.findUnique({
     where: { id: params.id },
     include: {
-      company: {
-        include: {
-          logo: true,
-        },
-      },
+      company: { include: { logo: true } },
       posterFile: true,
     },
   })
 
-  if (!job) notFound()
+  if (!job) return notFound()
 
   return <JobDetailPublic job={job} />
 }
 
-// Tambahkan ini supaya dynamic route recognized oleh Next
 export async function generateStaticParams() {
   return []
 }
