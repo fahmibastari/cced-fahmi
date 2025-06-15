@@ -2,11 +2,13 @@ import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import JobDetailPublic from '@/components/public/JobDetailPublic'
 
-export default async function JobDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+type Props = {
+  params: {
+    id: string
+  }
+}
+
+export default async function Page({ params }: Props) {
   const job = await prisma.job.findUnique({
     where: { id: params.id },
     include: {
@@ -24,7 +26,7 @@ export default async function JobDetailPage({
   return <JobDetailPublic job={job} />
 }
 
-// ✅ Tambahkan ini untuk membuat Next.js tahu param valid
+// Tambahkan ini supaya dynamic route recognized oleh Next
 export async function generateStaticParams() {
   return []
 }
