@@ -2,13 +2,8 @@ import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import JobDetailPublic from '@/components/public/JobDetailPublic'
 
-type PageProps = {
-  params: {
-    id: string
-  }
-}
-
-export default async function Page({ params }: PageProps) {
+// jangan define PageProps sendiri — biarkan inference native NextJS
+export default async function Page({ params }: { params: { id: string } }) {
   const job = await prisma.job.findUnique({
     where: { id: params.id },
     include: {
@@ -22,6 +17,7 @@ export default async function Page({ params }: PageProps) {
   return <JobDetailPublic job={job} />
 }
 
+// wajib define ini di dynamic route
 export async function generateStaticParams() {
   return []
 }
