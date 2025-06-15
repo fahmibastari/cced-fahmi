@@ -1,3 +1,5 @@
+export const runtime = 'nodejs' // ✅ Tambahkan ini
+
 import Credentials from 'next-auth/providers/credentials'
 import bcryptjs from 'bcryptjs'
 import type { NextAuthConfig } from 'next-auth'
