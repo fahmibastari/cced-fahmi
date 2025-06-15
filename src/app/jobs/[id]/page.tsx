@@ -2,8 +2,13 @@ import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import JobDetailPublic from '@/components/public/JobDetailPublic'
 
-// Definisikan `params` dengan tipe yang sesuai
-export default async function JobDetailPage({ params }: { params: { id: string } }): Promise<JSX.Element> {
+type JobDetailPageProps = {
+  params: {
+    id: string
+  }
+}
+
+export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = params
 
   const job = await prisma.job.findUnique({
@@ -14,15 +19,13 @@ export default async function JobDetailPage({ params }: { params: { id: string }
           logo: true,
         },
       },
-      posterFile: true, // ✅ PENTING: Tambahkan ini!
+      posterFile: true,
     },
   })
 
   if (!job) {
-    notFound(); // Menangani jika data tidak ditemukan
+    notFound()
   }
 
-  return (
-    <JobDetailPublic job={job} />
-  );
+  return <JobDetailPublic job={job} />
 }
