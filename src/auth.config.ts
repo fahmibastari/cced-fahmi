@@ -1,7 +1,7 @@
 export const runtime = 'nodejs' // ✅ Tambahkan ini
 
 import Credentials from 'next-auth/providers/credentials'
-import bcryptjs from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import type { NextAuthConfig } from 'next-auth'
 
 import { signInSchema } from './lib/zod'
@@ -21,7 +21,7 @@ export default {
             return null
           }
 
-          const passwordMatch = await bcryptjs.compare(password, user.password)
+          const passwordMatch = await bcrypt.compare(password, user.password)
 
           if (passwordMatch) {
             return user

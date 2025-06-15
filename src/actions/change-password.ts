@@ -4,7 +4,7 @@ import { getUserByEmail } from '@/data/user'
 import prisma from '@/lib/prisma'
 import { resetPasswordSchema } from '@/lib/zod'
 import * as z from 'zod'
-import bcryptjs from 'bcryptjs'
+import bcrypt from 'bcrypt'
 
 export const changePassword = async (
   data: z.infer<typeof resetPasswordSchema>,
@@ -44,7 +44,7 @@ export const changePassword = async (
       id: user.id,
     },
     data: {
-      password: await bcryptjs.hash(password, 10),
+      password: await bcrypt.hash(password, 10),
     },
   })
 

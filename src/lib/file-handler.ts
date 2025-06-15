@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import fs from 'node:fs/promises'
 import path from 'path'
 
