@@ -2,7 +2,7 @@
 export const runtime = 'nodejs'
 
 import Credentials from 'next-auth/providers/credentials'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import type { NextAuthConfig } from 'next-auth'
 
 import { signInSchema } from './lib/zod'
