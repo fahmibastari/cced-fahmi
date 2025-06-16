@@ -19,11 +19,12 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const token = await getToken({ req })
   const isLoggedIn = !!token
+  const { nextUrl } = req
 
   const isApiAuthRoute = pathname.startsWith(apiAuthPrefix)
   const isApiPublicRoute = pathname.startsWith(apiPublicPrefix)
   const isPublicRoute = publicRoutes.includes(pathname)
-  const isAuthRoute = authRoutes.includes(pathname)
+  const isAuthRoute = authRoutes.includes(nextUrl.pathname)
   const isBlogRoute = pathname.startsWith(blogPrefix)
   const iskegiatanRoute = pathname.startsWith(kegiatanPrefix)
   const isAssessmentRoute = pathname.startsWith(assessmentPrefix)
@@ -47,15 +48,15 @@ export async function middleware(req: NextRequest) {
 
     if (isAuthRoute) {
       if (isLoggedIn) {
-        return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, req.url))
+        return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
       }
       return
     }
     
 
-  if (!isLoggedIn) {
-    return NextResponse.redirect(new URL('/login', req.url))
-  }
+    if (!isLoggedIn) {
+      return Response.redirect(new URL('/login', nextUrl))
+    }
 
   return NextResponse.next()
 }
