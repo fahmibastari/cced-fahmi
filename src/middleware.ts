@@ -45,9 +45,13 @@ export async function middleware(req: NextRequest) {
 
   if (isPublicRoute || isJobDetailRoute) return NextResponse.next()
 
-  if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, req.url))
-  }
+    if (isAuthRoute) {
+      if (isLoggedIn) {
+        return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, req.url))
+      }
+      return
+    }
+    
 
   if (!isLoggedIn) {
     return NextResponse.redirect(new URL('/login', req.url))

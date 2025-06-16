@@ -2,6 +2,7 @@ export const publicRoutes = [
   '/',
   '/new-verification',
   '/reset-password',
+  '/register',
   '/api/get-news',
 ]
 
