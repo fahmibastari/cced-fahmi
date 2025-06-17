@@ -2,7 +2,9 @@ import Credentials from 'next-auth/providers/credentials'
 import { getUserByEmail } from './data/user'
 import { signInSchema } from './lib/zod'
 import bcrypt from 'bcryptjs'
-import type { NextAuthConfig } from 'next-auth'
+import type { NextAuthConfig, Session, User } from 'next-auth'
+import type { AdapterUser } from 'next-auth/adapters'
+import type { JWT } from 'next-auth/jwt'
 
 export const runtime = 'nodejs'
 
@@ -26,25 +28,36 @@ const authConfig: NextAuthConfig = {
           email: user.email,
           name: user.fullname,
           role: user.role,
+          emailVerified: user.emailVerified, // ← kalau kamu pakai session/jwt
         }
       },
     }),
   ],
+
   session: { strategy: 'jwt' },
 
   callbacks: {
-    async jwt({ token, user }) {
+    async session({ token, session }: { token: JWT; session: Session }) {
+      if (token.sub && session.user) {
+        session.user.id = token.sub
+      }
+      if (token.role && session.user) {
+        session.user.role = token.role as string
+      }
+      return session
+    },
+
+    async jwt({
+      token,
+      user,
+    }: {
+      token: JWT
+      user?: User | AdapterUser
+    }) {
       if (user) {
         token.role = user.role
       }
       return token
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub!
-        session.user.role = (token as { role?: string }).role
-      }
-      return session
     },
   },
 
