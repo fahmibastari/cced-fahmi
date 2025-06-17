@@ -6,6 +6,7 @@ import { generateVerificationToken } from '@/lib/tokens'
 import { signInSchema } from '@/lib/zod'
 import { DEFAULT_LOGIN_REDIRECT } from '@/routes'
 import { redirect } from 'next/navigation'
+import { AuthError } from 'next-auth'
 import * as z from 'zod'
 
 export const login = async (data: z.infer<typeof signInSchema>) => {
@@ -32,15 +33,28 @@ export const login = async (data: z.infer<typeof signInSchema>) => {
     return { success: 'Email Konfirmasi Dikirim!' }
   }
 
-  const res = await signIn('credentials', {
-    email,
-    password,
-    redirect: false,
-  })
+  try {
+    const res = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
 
-  if (res?.error) {
-    return { error: 'Kredensial Tidak Valid' }
+    if (res?.error) {
+      return { error: 'Kredensial Tidak Valid' }
+    }
+
+    return redirect(DEFAULT_LOGIN_REDIRECT)
+  } catch (e) {
+    if (e instanceof AuthError) {
+      switch (e.type) {
+        case 'CredentialsSignin':
+          return { error: 'Kredensial Tidak Valid' }
+        default:
+          return { error: 'Terjadi kesalahan saat login' }
+      }
+    }
+
+    throw e // untuk debug purposes
   }
-
-  return redirect(DEFAULT_LOGIN_REDIRECT)
 }
