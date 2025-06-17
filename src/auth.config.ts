@@ -26,10 +26,11 @@ const authConfig: NextAuthConfig = {
         return {
           id: user.id,
           email: user.email,
-          name: user.fullname,
-          role: user.role,
-          emailVerified: user.emailVerified, // ← kalau kamu pakai session/jwt
-        }
+          name: user.fullname ?? '',
+          role: user.role ?? '',
+          emailVerified: user.emailVerified ?? null,
+          image: null,
+        } as AdapterUser        
       },
     }),
   ],
@@ -37,28 +38,25 @@ const authConfig: NextAuthConfig = {
   session: { strategy: 'jwt' },
 
   callbacks: {
-    async session({ token, session }: { token: JWT; session: Session }) {
-      if (token.sub && session.user) {
+    async session({ token, session }) {
+      if (token?.sub && session.user) {
         session.user.id = token.sub
       }
-      if (token.role && session.user) {
-        session.user.role = token.role as string
+      if (token?.role && session.user) {
+        session.user.role = token.role
       }
       return session
     },
+    
 
-    async jwt({
-      token,
-      user,
-    }: {
-      token: JWT
-      user?: User | AdapterUser
-    }) {
+    async jwt({ token, user }) {
       if (user) {
         token.role = user.role
+        token.email = user.email // untuk jaga-jaga
       }
       return token
-    },
+    }
+    
   },
 
   pages: {
