@@ -1,3 +1,4 @@
+// src/auth.config.ts
 export const runtime = 'nodejs'
 
 import Credentials from 'next-auth/providers/credentials'
@@ -11,42 +12,37 @@ const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
       async authorize(credentials) {
-        const validatedFields = signInSchema.safeParse(credentials)
+        const validated = signInSchema.safeParse(credentials)
 
-        if (!validatedFields.success) {
+        if (!validated.success) {
           console.error('[NextAuth] Invalid credential schema:', credentials)
           return null
         }
 
-        const { email, password } = validatedFields.data
+        const { email, password } = validated.data
         const user = await getUserByEmail(email)
 
-        if (!user || typeof user.password !== 'string') {
-          console.error('[NextAuth] User not found or password missing', user)
+        if (!user || !user.password) {
+          console.error('[NextAuth] User not found or password missing')
           return null
         }
 
-        const passwordMatch = await bcrypt.compare(password, user.password)
+        const isMatch = await bcrypt.compare(password, user.password)
+        if (!isMatch) return null
 
-        if (passwordMatch) {
-          return {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            emailVerified: user.emailVerified,
-            name: user.fullname,
-          }
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.fullname,
+          role: user.role,
+          emailVerified: user.emailVerified,
         }
-
-        return user
       },
     }),
   ],
 
-  // Optional: enable JWT if not using database session
   session: { strategy: 'jwt' },
 
-  // Enable debug logs during development
   debug: process.env.NODE_ENV === 'development',
 }
 
