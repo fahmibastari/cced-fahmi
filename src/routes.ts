@@ -16,7 +16,7 @@ export const aboutPrefix = '/about'
 
 export const apiPublicPrefix = '/api/public'
 
-export const authRoutes = ['/login', '/register', 'logout', '/forgot-password']
+export const authRoutes = ['/login', '/register', '/logout', '/forgot-password']
 
 export const apiAuthPrefix = '/api/auth'
 

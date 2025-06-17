@@ -8,4 +8,9 @@ const nextConfig = {
 }
 
 // Export the configuration using ES module syntax
-export default nextConfig
+export default {
+  experimental: {
+    serverComponentsExternalPackages: ["bcrypt"],
+  },
+};
+

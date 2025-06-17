@@ -1,5 +1,3 @@
-// src/middleware.ts
-
 import { getToken } from 'next-auth/jwt'
 import { NextRequest, NextResponse } from 'next/server'
 import {
@@ -24,9 +22,9 @@ export async function middleware(req: NextRequest) {
   const isApiAuthRoute = pathname.startsWith(apiAuthPrefix)
   const isApiPublicRoute = pathname.startsWith(apiPublicPrefix)
   const isPublicRoute = publicRoutes.includes(pathname)
-  const isAuthRoute = authRoutes.includes(nextUrl.pathname)
+  const isAuthRoute = authRoutes.includes(pathname)
   const isBlogRoute = pathname.startsWith(blogPrefix)
-  const iskegiatanRoute = pathname.startsWith(kegiatanPrefix)
+  const isKegiatanRoute = pathname.startsWith(kegiatanPrefix)
   const isAssessmentRoute = pathname.startsWith(assessmentPrefix)
   const isAboutRoute = pathname.startsWith(aboutPrefix)
   const isJobDetailRoute = pathname.startsWith('/jobs')
@@ -37,7 +35,7 @@ export async function middleware(req: NextRequest) {
     isApiAuthRoute ||
     isApiPublicRoute ||
     isBlogRoute ||
-    iskegiatanRoute ||
+    isKegiatanRoute ||
     isAssessmentRoute ||
     isAboutRoute
   ) {
@@ -46,17 +44,16 @@ export async function middleware(req: NextRequest) {
 
   if (isPublicRoute || isJobDetailRoute) return NextResponse.next()
 
-    if (isAuthRoute) {
-      if (isLoggedIn) {
-        return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
-      }
-      return
+  if (isAuthRoute) {
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
     }
-    
+    return NextResponse.next()
+  }
 
-    if (!isLoggedIn) {
-      return Response.redirect(new URL('/login', nextUrl))
-    }
+  if (!isLoggedIn) {
+    return NextResponse.redirect(new URL('/login', nextUrl))
+  }
 
   return NextResponse.next()
 }
