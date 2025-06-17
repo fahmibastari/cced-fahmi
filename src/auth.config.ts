@@ -1,10 +1,11 @@
 import Credentials from 'next-auth/providers/credentials'
-import { getUserByEmail } from './data/user'
-import { signInSchema } from './lib/zod'
 import bcrypt from 'bcryptjs'
-import type { NextAuthConfig, Session, User } from 'next-auth'
+import { signInSchema } from './lib/zod'
+import { getUserByEmail } from './data/user'
+import type { NextAuthConfig } from 'next-auth'
 import type { AdapterUser } from 'next-auth/adapters'
 import type { JWT } from 'next-auth/jwt'
+import type { Session } from 'next-auth'
 
 export const runtime = 'nodejs'
 
@@ -20,8 +21,8 @@ const authConfig: NextAuthConfig = {
 
         if (!user || !user.password) return null
 
-        const isValid = await bcrypt.compare(password, user.password)
-        if (!isValid) return null
+        const isMatch = await bcrypt.compare(password, user.password)
+        if (!isMatch) return null
 
         return {
           id: user.id,
@@ -30,7 +31,7 @@ const authConfig: NextAuthConfig = {
           role: user.role ?? '',
           emailVerified: user.emailVerified ?? null,
           image: null,
-        } as AdapterUser        
+        } satisfies AdapterUser
       },
     }),
   ],
@@ -38,26 +39,25 @@ const authConfig: NextAuthConfig = {
   session: { strategy: 'jwt' },
 
   callbacks: {
-    async session({ token, session }) {
-      if (token?.sub && session.user) {
+    async jwt({ token, user }: any) {
+      if (user) {
+        token.role = user.role
+        token.sub = user.id
+      }
+      return token
+    },
+  
+    async session({ token, session }: { token: JWT; session: Session }) {
+      if (token.sub && session.user) {
         session.user.id = token.sub
       }
-      if (token?.role && session.user) {
+      if (token.role && session.user) {
         session.user.role = token.role
       }
       return session
     },
-    
-
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role
-        token.email = user.email // untuk jaga-jaga
-      }
-      return token
-    }
-    
   },
+  
 
   pages: {
     signIn: '/login',
