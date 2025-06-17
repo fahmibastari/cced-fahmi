@@ -4,7 +4,7 @@
 import prisma from '@/lib/prisma'
 import { saveFile } from '@/lib/file-handler'
 import { companySchema, memberSchema, userSchema } from '@/lib/zod'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { generateVerificationToken } from '@/lib/tokens'
 import { sendVerificationEmail } from '@/lib/mail'
 import * as z from 'zod'

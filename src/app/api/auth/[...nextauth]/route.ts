@@ -6,4 +6,6 @@ export const runtime = 'nodejs'
 
 const handler = NextAuth(authConfig)
 
-export { handler as GET, handler as POST }
+// src/app/api/auth/[...nextauth]/route.ts
+export { handlers as GET, handlers as POST } from '@/auth'
+
