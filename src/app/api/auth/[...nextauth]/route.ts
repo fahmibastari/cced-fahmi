@@ -1,8 +1,8 @@
-import NextAuthHandler from 'next-auth'
+import NextAuth from 'next-auth'
 import authConfig from '@/auth.config'
 
 export const runtime = 'nodejs'
 
-const { GET, POST } = NextAuthHandler(authConfig).handlers
+const handler = NextAuth(authConfig)
 
-export { GET, POST }
+export { handler as GET, handler as POST }

@@ -14,11 +14,12 @@
     "export": "next export"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.7.4",
+    "@auth/core": "^0.39.1",
+    "@auth/prisma-adapter": "^2.9.1",
     "@faker-js/faker": "^9.3.0",
     "@hookform/resolvers": "^3.9.1",
     "@lexical/react": "^0.27.1",
-    "@prisma/client": "^6.0.1",
+    "@prisma/client": "^6.10.1",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -35,7 +36,6 @@
     "@tiptap/extension-image": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@types/next-auth": "^3.15.0",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -47,7 +47,7 @@
     "lexical": "^0.27.1",
     "lucide-react": "^0.462.0",
     "next": "15.0.3",
-    "next-auth": "5.0.0-beta.28",
+    "next-auth": "5.0.0-beta.16",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.1",
@@ -62,7 +62,7 @@
     "tailwind-variants": "^1.0.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.0.3",
-    "zod": "^3.24.1"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -71,18 +71,25 @@
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^20",
+    "@types/node": "^20.19.1",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/uuid": "^10.0.0",
+    "autoprefixer": "^10.4.21",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.0.3",
-    "postcss": "^8",
+    "postcss": "^8.5.6",
     "prettier": "^3.4.2",
-    "prisma": "^6.0.0",
+    "prisma": "^6.10.1",
     "react-email": "4.0.13",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.17",
     "tsx": "^4.19.2",
     "typescript": "^5.8.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@auth/core": "0.28.1"
+    }
   }
 }
+

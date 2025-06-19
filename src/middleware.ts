@@ -15,7 +15,11 @@ import {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  const token = await getToken({ req })
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET!,
+    salt: process.env.AUTH_SALT!,
+  })
   const isLoggedIn = !!token
   const { nextUrl } = req
 
